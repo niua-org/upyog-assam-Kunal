@@ -3,10 +3,7 @@ package org.egov.land.repository.rowmapper;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.egov.land.web.models.Address;
 import org.egov.land.web.models.AuditDetails;
@@ -129,9 +126,9 @@ public class LandRowMapper implements ResultSetExtractor<List<LandInfo>> {
 				.lastModifiedTime(rs.getLong("land_last_modified_time"))
 				.build();
 
-		// Unit
+		// Unit - check if already exists
 		String unitId = rs.getString("unit_id");
-		if (unitId != null) {
+		if (unitId != null && !isUnitAlreadyAdded(landInfo, unitId)) {
 			Long occupancyDate = null;
 			long occ = rs.getLong("occupancy_date");
 			if (!rs.wasNull()) occupancyDate = occ;
@@ -149,9 +146,9 @@ public class LandRowMapper implements ResultSetExtractor<List<LandInfo>> {
 			landInfo.addUnitItem(unit);
 		}
 
-		// Owner
+		// Owner - check if already exists
 		String ownerId = rs.getString("owner_id");
-		if (ownerId != null) {
+		if (ownerId != null && !isOwnerAlreadyAdded(landInfo, ownerId)) {
 			OwnerInfoV2 owner = OwnerInfoV2.builder()
 					.tenantId(tenantId)
 					.ownerId(ownerId)
@@ -187,9 +184,9 @@ public class LandRowMapper implements ResultSetExtractor<List<LandInfo>> {
 			landInfo.addOwnerItem(owner);
 		}
 
-		// Institution
+		// Institution - only set if not already set
 		String instId = rs.getString("inst_id");
-		if (instId != null) {
+		if (instId != null && landInfo.getInstitution() == null) {
 			Institution institution = Institution.builder()
 					.id(instId)
 					.type(rs.getString("inst_type"))
@@ -200,9 +197,9 @@ public class LandRowMapper implements ResultSetExtractor<List<LandInfo>> {
 			landInfo.setInstitution(institution);
 		}
 
-		// Document
+		// Document - check if already exists
 		String documentId = rs.getString("doc_id");
-		if (documentId != null) {
+		if (documentId != null && !isDocumentAlreadyAdded(landInfo, documentId)) {
 			Document document = Document.builder()
 					.id(documentId)
 					.documentType(rs.getString("doc_type"))
@@ -213,4 +210,22 @@ public class LandRowMapper implements ResultSetExtractor<List<LandInfo>> {
 			landInfo.addDocumentItem(document);
 		}
 	}
+
+	/// Helper Methods to check if owners, units & Docs existed before
+	private boolean isUnitAlreadyAdded(LandInfo landInfo, String unitId) {
+		return landInfo.getUnits() != null &&
+				landInfo.getUnits().stream().anyMatch(unit -> unitId.equals(unit.getId()));
+	}
+
+	private boolean isOwnerAlreadyAdded(LandInfo landInfo, String ownerId) {
+		return landInfo.getOwners() != null &&
+				landInfo.getOwners().stream().anyMatch(owner -> ownerId.equals(owner.getOwnerId()));
+	}
+
+	private boolean isDocumentAlreadyAdded(LandInfo landInfo, String documentId) {
+		return landInfo.getDocuments() != null &&
+				landInfo.getDocuments().stream().anyMatch(doc -> documentId.equals(doc.getId()));
+	}
+
+
 }

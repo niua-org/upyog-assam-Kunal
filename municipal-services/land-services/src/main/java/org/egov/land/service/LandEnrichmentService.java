@@ -276,15 +276,15 @@ public class LandEnrichmentService {
 			});
 		});
 
-		/// TODO: Need to Remove it when userService corrected
-		landInfos.forEach(landInfo -> {
-			Set<String> seenUuids = new HashSet<>();
-			List<OwnerInfoV2> uniqueOwners = landInfo.getOwners().stream()
-					.filter(owner -> seenUuids.add(owner.getUuid()))
-					.collect(Collectors.toList());
-
-			landInfo.setOwners(uniqueOwners);
-		});
+//		/// TODO: Need to Remove it when userService corrected
+//		landInfos.forEach(landInfo -> {
+//			Set<String> seenUuids = new HashSet<>();
+//			List<OwnerInfoV2> uniqueOwners = landInfo.getOwners().stream()
+//					.filter(owner -> seenUuids.add(owner.getUuid()))
+//					.collect(Collectors.toList());
+//
+//			landInfo.setOwners(uniqueOwners);
+//		});
 
 	}
 }
