@@ -198,9 +198,9 @@ const InboxComposer = ({
               searchFormState={searchFormState}
               {...{ controlSearchForm }}
               searchFieldComponents={
-                <div style={{ display: "flex", gap: "20px", alignItems: "center", marginTop:"10px"}}>                
+                <div style={{ display: "flex", gap: "20px", justifyContent: "flex-end", marginTop:"10px", width:"100%", marginRight:"20px"}}>                
                   <SubmitBar label={t("ES_COMMON_SEARCH")} submit form="search-form" className="submit-bar-search" />
-                  <p onClick={onResetSearchForm} className="clear-search" style={{ paddingTop: "9px", color: "#a82227", cursor: "pointer" }}>
+                  <p onClick={onResetSearchForm} className="clear-search" style={{ paddingTop: "40px", color: "#a82227", cursor: "pointer" }}>
                     {t(`ES_COMMON_CLEAR_SEARCH`)}
                   </p>
                 </div>

@@ -1,5 +1,5 @@
 import React, { Fragment, useCallback, useMemo, useReducer } from "react";
-import { InboxComposer, CaseIcon, Header } from "@upyog/digit-ui-react-components";
+import { CaseIcon, Header } from "@upyog/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import useBPAV2Inbox from "../../../../../../libraries/src/hooks/obpsv2/useBPAV2Inbox";
@@ -7,6 +7,7 @@ import SearchFormFieldsComponents from "./SearchFormFieldsComponent";
 import FilterFormFieldsComponent from "./FilterFormFieldsComponent";
 import useInboxTableConfig from "./useInboxTableConfig";
 import useInboxMobileCardsData from "./useInboxMobileCardsData";
+import InboxComposer from "../../../../../../react-components/src/hoc/InboxComposer"
 const Inbox = ({ parentRoute }) => {
   window.scroll(0, 0);
   const { t } = useTranslation();
