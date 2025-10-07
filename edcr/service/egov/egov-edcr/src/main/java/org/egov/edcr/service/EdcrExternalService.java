@@ -181,7 +181,7 @@ public class EdcrExternalService {
             } catch (IOException e) {
                 LOG.log(Level.ERROR, e);
             }
-            LOG.debug("Completed de-serialization");
+            LOG.info("Completed de-serialization");
             if (applicationInfo.getPlan() != null)
                 for (Block b : applicationInfo.getPlan().getBlocks()) {
                     for (Floor f : b.getBuilding().getFloors()) {

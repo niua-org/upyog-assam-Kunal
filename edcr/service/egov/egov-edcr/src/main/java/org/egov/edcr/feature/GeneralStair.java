@@ -303,7 +303,7 @@ public class GeneralStair extends FeatureProcess {
 	 * @param errors             Map to collect error messages.
 	 */
 	private void handleStairErrors(Plan plan, Block block, List<String> stairAbsent, int generalStairCount, HashMap<String, String> errors) {
-	    LOG.debug("Handling stair errors for Block [{}]. GeneralStair count: {}, Absent stairs: {}", 
+	    LOG.info("Handling stair errors for Block [{}]. GeneralStair count: {}, Absent stairs: {}", 
 	              block.getNumber(), generalStairCount, stairAbsent);
 
 	    for (String error : stairAbsent) {
@@ -322,7 +322,7 @@ public class GeneralStair extends FeatureProcess {
 	        plan.addErrors(errors);
 	    }
 
-	    LOG.debug("Completed handling stair errors for Block [{}]. Current errors: {}", block.getNumber(), errors);
+	    LOG.info("Completed handling stair errors for Block [{}]. Current errors: {}", block.getNumber(), errors);
 	}
 
 	/**
@@ -348,12 +348,12 @@ public class GeneralStair extends FeatureProcess {
 	            block.getNumber(), floor.getNumber(), generalStair.getNumber(), landings.size());
 
 	    for (StairLanding landing : landings) {
-	        LOG.debug("Processing Landing [{}] for Stair [{}]. Widths: {}", landing.getNumber(), generalStair.getNumber(), landing.getWidths());
+	        LOG.info("Processing Landing [{}] for Stair [{}]. Widths: {}", landing.getNumber(), generalStair.getNumber(), landing.getWidths());
 
 	        List<BigDecimal> widths = landing.getWidths();
 	        if (!widths.isEmpty()) {
 	            BigDecimal landingWidth = widths.stream().reduce(BigDecimal::min).get();
-	            LOG.debug("Minimum width found for Landing [{}]: {}", landing.getNumber(), landingWidth);
+	            LOG.info("Minimum width found for Landing [{}]: {}", landing.getNumber(), landingWidth);
 
 	            BigDecimal minWidth = BigDecimal.ZERO;
 	            boolean valid = false;
@@ -381,7 +381,7 @@ public class GeneralStair extends FeatureProcess {
 	                        valid ? Result.Accepted.getResultVal() : Result.Not_Accepted.getResultVal(),
 	                        scrutinyDetailLanding);
 
-	                LOG.debug("Report output details set for Landing [{}] in Stair [{}].", landing.getNumber(), generalStair.getNumber());
+	                LOG.info("Report output details set for Landing [{}] in Stair [{}].", landing.getNumber(), generalStair.getNumber());
 	            }
 	        } else {
 	            String key = GENERAL_STAIR_LANDING_WIDTH_NOT_DEFINED + block.getNumber() + FLOOR_SPACED
@@ -552,7 +552,7 @@ public class GeneralStair extends FeatureProcess {
 	    BigDecimal noOfRises = flight.getNoOfRises();
 	    Boolean flightPolyLineClosed = flight.getFlightClosed();
 
-	    LOG.debug("Flight [{}] details: PolyLines [{}], Lengths [{}], Widths [{}], No. of Rises [{}], Closed [{}]",
+	    LOG.info("Flight [{}] details: PolyLines [{}], Lengths [{}], Widths [{}], No. of Rises [{}], Closed [{}]",
 	            flight.getNumber(), (flightPolyLines != null ? flightPolyLines.size() : 0),
 	            (flightLengths != null ? flightLengths.size() : 0),
 	            (flightWidths != null ? flightWidths.size() : 0),

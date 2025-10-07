@@ -26,7 +26,7 @@ public class ArchitecturalFeatureExtract extends FeatureExtract {
 
     @Override
     public PlanDetail extract(PlanDetail pl) {
-        LOG.debug("Starting of ArchitecturalFeatureExtract extract method");
+        LOG.info("Starting of ArchitecturalFeatureExtract extract method");
         Set<String> roomOccupancyTypes = new HashSet<>();
         Map<String, Integer> architecturalFeature = pl.getSubFeatureColorCodesMaster().get("architecturalFeature");
         roomOccupancyTypes.addAll(architecturalFeature.keySet());
@@ -34,7 +34,7 @@ public class ArchitecturalFeatureExtract extends FeatureExtract {
             if (block.getBuilding() != null && !block.getBuilding().getFloors().isEmpty())
                 for (Floor floor : block.getBuilding().getFloors()) {
 
-                    LOG.debug("Processing ArchitecturalFeature for Block: " + block.getNumber() + " Floor: " + floor.getNumber());
+                    LOG.info("Processing ArchitecturalFeature for Block: " + block.getNumber() + " Floor: " + floor.getNumber());
                     Map<Integer, List<BigDecimal>> architecturalFeatureHeightMap = new HashMap<>();
                     String architecturalFeatureLayerName = String.format(layerNames.getLayerName("BLK_" + block.getNumber() + "FLR_" + floor.getNumber() + "_ARCHITECTURAL_FEATURE"), "+\\d");
                     List<String> architecturalFeatureLayers = Util.getLayerNamesLike(pl.getDoc(), architecturalFeatureLayerName);
@@ -85,7 +85,7 @@ public class ArchitecturalFeatureExtract extends FeatureExtract {
                     }
                 }
         }
-        LOG.debug("Ending of ArchitecturalFeatureExtract extract method");
+        LOG.info("Ending of ArchitecturalFeatureExtract extract method");
         return pl;
     }
 }

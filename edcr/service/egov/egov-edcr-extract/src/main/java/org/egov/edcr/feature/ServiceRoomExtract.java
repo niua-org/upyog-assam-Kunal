@@ -28,7 +28,7 @@ public class ServiceRoomExtract extends FeatureExtract {
 
     @Override
     public PlanDetail extract(PlanDetail pl) {
-        LOG.debug("Starting of ServiceRoomExtract extract method");
+        LOG.info("Starting of ServiceRoomExtract extract method");
         Map<String, Integer> roomOccupancyFeature = pl.getSubFeatureColorCodesMaster().get("serviceRoom");
         Set<String> roomOccupancyTypes = new HashSet<>();
         roomOccupancyTypes.addAll(roomOccupancyFeature.keySet());
@@ -59,19 +59,19 @@ public class ServiceRoomExtract extends FeatureExtract {
 
                     if(floor.getUnits() != null && !floor.getUnits().isEmpty())
                         for (FloorUnit floorUnit : floor.getUnits()) {
-                            LOG.debug("Processing ServiceRoom for Block: " + block.getNumber() + " Floor: " + floor.getNumber() + " Unit: " + floorUnit.getUnitNumber());
+                            LOG.info("Processing ServiceRoom for Block: " + block.getNumber() + " Floor: " + floor.getNumber() + " Unit: " + floorUnit.getUnitNumber());
 
                             Map<Integer, List<BigDecimal>> serviceRoomHeightMap = new HashMap<>();
                             String serviceRoomLayerName = String.format(layerNames.getLayerName("LAYER_NAME_UNIT_SERVICEROOM"), block.getNumber(), floor.getNumber(), floorUnit.getUnitNumber(), "+\\d");
                             List<String> serviceRoomLayers = Util.getLayerNamesLike(pl.getDoc(), serviceRoomLayerName);
-                            LOG.debug("Service Room Layer Name: " + serviceRoomLayerName + " Matched Layers: " + serviceRoomLayers);
+                            LOG.info("Service Room Layer Name: " + serviceRoomLayerName + " Matched Layers: " + serviceRoomLayers);
 
                             if (!serviceRoomLayers.isEmpty()) {
                                 for (String serviceRoomLayer : serviceRoomLayers) {
                                     for (String type : roomOccupancyTypes) {
                                         Integer colorCode = roomOccupancyFeature.get(type);
                                         List<BigDecimal> serviceRoomheights = Util.getListOfDimensionByColourCode(pl, serviceRoomLayer, colorCode);
-                                        LOG.debug("Service Room Layer: " + serviceRoomLayer + " Type: " + type + " ColorCode: " + colorCode + " Heights: " + serviceRoomheights);
+                                        LOG.info("Service Room Layer: " + serviceRoomLayer + " Type: " + type + " ColorCode: " + colorCode + " Heights: " + serviceRoomheights);
                                         if (!serviceRoomheights.isEmpty())
                                             serviceRoomHeightMap.put(colorCode, serviceRoomheights);
                                     }
@@ -107,15 +107,15 @@ public class ServiceRoomExtract extends FeatureExtract {
                                             room.setRooms(rooms);
                                         }
                                         floorUnit.addServiceRoom(room);
-                                        LOG.debug("Added Service Room: " + room.getNumber() + " with " + room.getRooms().size() + " rooms and " + room.getHeights().size() + " heights to Unit: " + floorUnit.getUnitNumber());
+                                        LOG.info("Added Service Room: " + room.getNumber() + " with " + room.getRooms().size() + " rooms and " + room.getHeights().size() + " heights to Unit: " + floorUnit.getUnitNumber());
                                     }
-                                    LOG.debug("Service Room Height Map: " + serviceRoomHeightMap + " for Layer: " + serviceRoomLayer);
+                                    LOG.info("Service Room Height Map: " + serviceRoomHeightMap + " for Layer: " + serviceRoomLayer);
                                 }
                             }
                         }
                 }
         }
-        LOG.debug("Ending of ServiceRoomExtract extract method");
+        LOG.info("Ending of ServiceRoomExtract extract method");
         return pl;
     }
 }

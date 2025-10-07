@@ -83,7 +83,7 @@ public class InteriorOpenSpaceService extends FeatureProcess {
 
     @Override
     public Plan validate(Plan pl) {
-        LOG.debug("Validating plan: {}");
+        LOG.info("Validating plan: {}");
         return pl;
     }
 
@@ -92,7 +92,7 @@ public class InteriorOpenSpaceService extends FeatureProcess {
         LOG.info("Processing Interior Open Space for plan");
         InteriorOpenSpaceServiceRequirement ruleValues = getRuleValues(pl);
         if (ruleValues != null) {
-            LOG.debug("Fetched rule values for Interior Open Space: {}", ruleValues);
+            LOG.info("Fetched rule values for Interior Open Space: {}", ruleValues);
             processInteriorOpenSpaces(pl, ruleValues);
         } else {
             LOG.warn("No Interior Open Space rules found for plan");
@@ -104,14 +104,14 @@ public class InteriorOpenSpaceService extends FeatureProcess {
      * Retrieves the matched rule for interior open space service feature from cache.
      */
     private InteriorOpenSpaceServiceRequirement getRuleValues(Plan pl) {
-        LOG.debug("Fetching Interior Open Space rules for plan");
+        LOG.info("Fetching Interior Open Space rules for plan");
         List<Object> rules = cache.getFeatureRules(pl, FeatureEnum.INTERIOR_OPEN_SPACE_SERVICE.getValue(), false);
         InteriorOpenSpaceServiceRequirement matched = rules.stream()
                 .filter(InteriorOpenSpaceServiceRequirement.class::isInstance)
                 .map(InteriorOpenSpaceServiceRequirement.class::cast)
                 .findFirst()
                 .orElse(null);
-        LOG.debug("Rule values found: {}", matched != null);
+        LOG.info("Rule values found: {}", matched != null);
         return matched;
     }
 
@@ -123,14 +123,14 @@ public class InteriorOpenSpaceService extends FeatureProcess {
                 pl.getBlocks().size());
 
         for (Block b : pl.getBlocks()) {
-            LOG.debug("Processing Block: {}", b.getNumber());
+            LOG.info("Processing Block: {}", b.getNumber());
             ScrutinyDetail scrutinyDetail = createScrutinyDetail();
 
             if (b.getBuilding() != null && b.getBuilding().getFloors() != null && !b.getBuilding().getFloors().isEmpty()) {
-                LOG.debug("Block {} has {} floors", b.getNumber(), b.getBuilding().getFloors().size());
+                LOG.info("Block {} has {} floors", b.getNumber(), b.getBuilding().getFloors().size());
 
                 for (Floor f : b.getBuilding().getFloors()) {
-                    LOG.debug("Processing Floor: {}", f.getNumber());
+                    LOG.info("Processing Floor: {}", f.getNumber());
 
                     processOpenSpaceComponent(pl, scrutinyDetail, f,
                             f.getInteriorOpenSpace().getVentilationShaft().getMeasurements(),
@@ -152,14 +152,14 @@ public class InteriorOpenSpaceService extends FeatureProcess {
                     applyClause91dValidation(pl, b, f, scrutinyDetail, ruleValues);
                 }
             } else {
-                LOG.debug("Block {} has no floors or no building defined", b.getNumber());
+                LOG.info("Block {} has no floors or no building defined", b.getNumber());
             }
         }
     }
 
     // Gets the building height, defaults to zero if not defined
     private BigDecimal getBuildingHeight(Block block) {
-        LOG.debug("Getting building height for Block: {}", block.getNumber());
+        LOG.info("Getting building height for Block: {}", block.getNumber());
         return (block.getBuilding() != null && block.getBuilding().getBuildingHeight() != null)
                 ? block.getBuilding().getBuildingHeight() : BigDecimal.ZERO;
     }
@@ -252,11 +252,11 @@ public class InteriorOpenSpaceService extends FeatureProcess {
                                            String ruleNoArea, String ruleNoWidth, String description) {
 
         if (measurements == null || measurements.isEmpty()) {
-            LOG.debug("No measurements found for {} at floor {}", description, f.getNumber());
+            LOG.info("No measurements found for {} at floor {}", description, f.getNumber());
             return;
         }
 
-        LOG.debug("Validating {} with {} measurements at floor {}", description, measurements.size(), f.getNumber());
+        LOG.info("Validating {} with {} measurements at floor {}", description, measurements.size(), f.getNumber());
 
         BigDecimal minArea = measurements.stream()
                 .map(Measurement::getArea)
@@ -268,7 +268,7 @@ public class InteriorOpenSpaceService extends FeatureProcess {
                 .reduce(BigDecimal::min)
                 .orElse(BigDecimal.ZERO);
 
-        LOG.debug("{} minArea: {}, minWidth: {} at floor {}", description, minArea, minWidth, f.getNumber());
+        LOG.info("{} minArea: {}, minWidth: {} at floor {}", description, minArea, minWidth, f.getNumber());
 
         // Area validation
         if (minArea.compareTo(areaValueOne) > 0) {
@@ -332,7 +332,7 @@ public class InteriorOpenSpaceService extends FeatureProcess {
 
     @Override
     public Map<String, Date> getAmendments() {
-        LOG.debug("No amendments defined for Interior Open Space");
+        LOG.info("No amendments defined for Interior Open Space");
         return new LinkedHashMap<>();
     }
 }

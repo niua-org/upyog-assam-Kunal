@@ -23,7 +23,7 @@ public class AdditionalFeatureExtract extends FeatureExtract {
 
     @Override
     public PlanDetail validate(PlanDetail pl) {
-        LOG.debug("Starting of AdditionalFeatureExtract validate method");
+        LOG.info("Starting of AdditionalFeatureExtract validate method");
         HashMap<String, String> errors = new HashMap<>();
         List<Block> blocks = pl.getBlocks();
         for (Block block : blocks)
@@ -34,7 +34,7 @@ public class AdditionalFeatureExtract extends FeatureExtract {
                                 LocaleContextHolder.getLocale()));
                 pl.addErrors(errors);
             }
-        LOG.debug("Ending of AdditionalFeatureExtract validate method");
+        LOG.info("Ending of AdditionalFeatureExtract validate method");
         return pl;
     }
 

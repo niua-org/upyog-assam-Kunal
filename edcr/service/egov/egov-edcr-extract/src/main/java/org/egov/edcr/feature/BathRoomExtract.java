@@ -29,7 +29,7 @@ public class BathRoomExtract extends FeatureExtract {
 
     @Override
     public PlanDetail extract(PlanDetail planDetail) {
-        LOG.debug("Starting of BathRoomExtract extract method");
+        LOG.info("Starting of BathRoomExtract extract method");
         List<DXFLWPolyline> rooms;
         List<Measurement> roomMeasurements;
         List<BigDecimal> roomHeights;
@@ -40,45 +40,45 @@ public class BathRoomExtract extends FeatureExtract {
         for (Block block : planDetail.getBlocks())
             if (block.getBuilding() != null && block.getBuilding().getFloors() != null)
                 for (Floor f : block.getBuilding().getFloors()) {
+/*
+                    String layerName = String.format(layerNames.getLayerName("LAYER_NAME_BLK_FLR_BATH"), block.getNumber(),
+                            f.getNumber());
+                    String ventilationLayerName = layerNames.getLayerName("LAYER_NAME_BLOCK_NAME_PREFIX") + block.getNumber() + "_"
+                            + layerNames.getLayerName("LAYER_NAME_FLOOR_NAME_PREFIX") + f.getNumber() + "_"
+                            + layerNames.getLayerName("LAYER_NAME_BATH_STORE_VENTILATION");
+                    ventilationBS = Util.getPolyLinesByLayer(planDetail.getDoc(), ventilationLayerName);
+                    if (ventilationBS != null) {
+                        ventilationMeasurements = ventilationBS.stream()
+                                .map(flightPolyLine -> new MeasurementDetail(flightPolyLine, true)).collect(Collectors.toList());
+                    } else {
+                        ventilationMeasurements = new ArrayList<>();
+                    }
+                    rooms = Util.getPolyLinesByLayer(planDetail.getDoc(), layerName);
 
-//                    String layerName = String.format(layerNames.getLayerName("LAYER_NAME_BLK_FLR_BATH"), block.getNumber(),
-//                            f.getNumber());
-//                    String ventilationLayerName = layerNames.getLayerName("LAYER_NAME_BLOCK_NAME_PREFIX") + block.getNumber() + "_"
-//                            + layerNames.getLayerName("LAYER_NAME_FLOOR_NAME_PREFIX") + f.getNumber() + "_"
-//                            + layerNames.getLayerName("LAYER_NAME_BATH_STORE_VENTILATION");
-//                    ventilationBS = Util.getPolyLinesByLayer(planDetail.getDoc(), ventilationLayerName);
-//                    if (ventilationBS != null) {
-//                        ventilationMeasurements = ventilationBS.stream()
-//                                .map(flightPolyLine -> new MeasurementDetail(flightPolyLine, true)).collect(Collectors.toList());
-//                    } else {
-//                        ventilationMeasurements = new ArrayList<>();
-//                    }
-//                    rooms = Util.getPolyLinesByLayer(planDetail.getDoc(), layerName);
-//
-//                    // Setting total no of bathrooms in plan detail
-//                    int noOfRooms = rooms.size();
-//                    planDetail.setTotalBathrooms(BigDecimal.valueOf(noOfRooms));
-//
-//                    roomMeasurements = rooms.stream()
-//                            .map(flightPolyLine -> new MeasurementDetail(flightPolyLine, true)).collect(Collectors.toList());
-//                    f.setBathRoom(new Room());
-//                    f.getBathRoom().setBathVentilation(ventilationMeasurements);
-//                    f.getBathRoom().setRooms(roomMeasurements);
-//                    roomHeights = Util.getListOfDimensionValueByLayer(planDetail,
-//                            String.format(layerNames.getLayerName("LAYER_NAME_BLK_FLR_BATH_HT"), block.getNumber(),
-//                                    f.getNumber()));
-//                    roomHeightsList = new ArrayList<>();
-//                    for (BigDecimal h : roomHeights) {
-//                        height = new RoomHeight();
-//                        height.setHeight(h);
-//                        roomHeightsList.add(height);
-//                    }
-//                    f.getBathRoom().setHeights(roomHeightsList);
+                    // Setting total no of bathrooms in plan detail
+                    int noOfRooms = rooms.size();
+                    planDetail.setTotalBathrooms(BigDecimal.valueOf(noOfRooms));
 
+                    roomMeasurements = rooms.stream()
+                            .map(flightPolyLine -> new MeasurementDetail(flightPolyLine, true)).collect(Collectors.toList());
+                    f.setBathRoom(new Room());
+                    f.getBathRoom().setBathVentilation(ventilationMeasurements);
+                    f.getBathRoom().setRooms(roomMeasurements);
+                    roomHeights = Util.getListOfDimensionValueByLayer(planDetail,
+                            String.format(layerNames.getLayerName("LAYER_NAME_BLK_FLR_BATH_HT"), block.getNumber(),
+                                    f.getNumber()));
+                    roomHeightsList = new ArrayList<>();
+                    for (BigDecimal h : roomHeights) {
+                        height = new RoomHeight();
+                        height.setHeight(h);
+                        roomHeightsList.add(height);
+                    }
+                    f.getBathRoom().setHeights(roomHeightsList);
+*/
 
                     if (f.getUnits() != null || !f.getUnits().isEmpty())
                         for (FloorUnit floorUnit : f.getUnits()) {
-                            LOG.debug("Processing BathRoom for Block: " + block.getNumber() + " Floor: " + f.getNumber()
+                            LOG.info("Processing BathRoom for Block: " + block.getNumber() + " Floor: " + f.getNumber()
                                     + " Unit: " + floorUnit.getUnitNumber());
                             String layerName = String.format(layerNames.getLayerName("LAYER_NAME_BLK_FLR_UNIT_BATH"), block.getNumber(),
                                     f.getNumber(), floorUnit.getUnitNumber());
@@ -118,7 +118,7 @@ public class BathRoomExtract extends FeatureExtract {
                         }
                 }
 
-        LOG.debug("End of BathRoomExtract extract method");
+        LOG.info("End of BathRoomExtract extract method");
         return planDetail;
     }
 

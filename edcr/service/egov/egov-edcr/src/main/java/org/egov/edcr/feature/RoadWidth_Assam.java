@@ -111,7 +111,7 @@ public class RoadWidth_Assam extends RoadWidth {
         BigDecimal roadWidth = pl.getPlanInformation().getRoadWidth();
         String typeOfArea = pl.getPlanInformation().getTypeOfArea(); // Can be NEW, ULB, OUTSIDE_ULB, etc.
 
-        LOG.debug("Road width: {}, Type of area: {}", roadWidth, typeOfArea);
+        LOG.info("Road width: {}, Type of area: {}", roadWidth, typeOfArea);
 
         if (!NEW.equalsIgnoreCase(typeOfArea)) {
             LOG.info("Type of area is not NEW. Skipping road width validation.");
@@ -119,7 +119,7 @@ public class RoadWidth_Assam extends RoadWidth {
         }
 
         ScrutinyDetail scrutinyDetail = buildRoadWidthScrutinyDetail();
-        LOG.debug("Created scrutiny detail for road width validation.");
+        LOG.info("Created scrutiny detail for road width validation.");
 
         ReportScrutinyDetail detail = new ReportScrutinyDetail();
         detail.setRuleNo(RULE_34);
@@ -134,13 +134,13 @@ public class RoadWidth_Assam extends RoadWidth {
         String occupancyCode = occupancy.getType() != null ? occupancy.getType().getCode() : null;
         String subOccupancyCode = occupancy.getSubtype() != null ? occupancy.getSubtype().getCode() : null;
 
-        LOG.debug("Occupancy code: {}, Sub occupancy code: {}", occupancyCode, subOccupancyCode);
+        LOG.info("Occupancy code: {}, Sub occupancy code: {}", occupancyCode, subOccupancyCode);
 
         detail.setOccupancy(occupancy.getSubtype() != null ? occupancy.getSubtype().getName() : occupancy.getType().getName());
 
         // Fetch values from MDMS
         BigDecimal requiredRoadWidth = getRequiredRoadWidthFromMDMS(pl, occupancyCode, subOccupancyCode);
-        LOG.debug("Required road width from MDMS: {}", requiredRoadWidth);
+        LOG.info("Required road width from MDMS: {}", requiredRoadWidth);
 
         if (requiredRoadWidth != null) {
             detail.setPermitted(requiredRoadWidth + METER);
@@ -157,7 +157,7 @@ public class RoadWidth_Assam extends RoadWidth {
             LOG.info("Road width comparison - Provided: {}, Required: {}, Status: {}", roadWidth, requiredRoadWidth, status);
 
             addScrutinyDetailtoPlan(scrutinyDetail, pl, details);
-            LOG.debug("Added scrutiny detail to plan report.");
+            LOG.info("Added scrutiny detail to plan report.");
         } else {
             LOG.warn("No required road width found in MDMS for occupancy: {}, sub-occupancy: {}", occupancyCode, subOccupancyCode);
         }
@@ -170,12 +170,12 @@ public class RoadWidth_Assam extends RoadWidth {
      * Fetches the permissible road width based on occupancy and sub-occupancy
      */
     public BigDecimal getRequiredRoadWidthFromMDMS(Plan plan, String occupancy, String subOccupancy) {
-        LOG.debug("Fetching required road width from MDMS for occupancy: {}, subOccupancy: {}", occupancy, subOccupancy);
+        LOG.info("Fetching required road width from MDMS for occupancy: {}, subOccupancy: {}", occupancy, subOccupancy);
 
         List<Object> rules = cache.getFeatureRules(plan, FeatureEnum.ROAD_WIDTH.getValue(), false);
 
         String typeOfArea = plan.getPlanInformation().getTypeOfArea(); // ULB or OUTSIDE_ULB
-        LOG.debug("Plan typeOfArea for road width fetch: {}", typeOfArea);
+        LOG.info("Plan typeOfArea for road width fetch: {}", typeOfArea);
 
         for (Object rule : rules) {
             if (rule instanceof RoadWidthRequirement) {
@@ -202,7 +202,7 @@ public class RoadWidth_Assam extends RoadWidth {
                         permissible = rwr.getPermissible();
                     }
 
-                    LOG.debug("Matched RoadWidthRequirement: occupancy={}, subOccupancy={}, permissible={}",
+                    LOG.info("Matched RoadWidthRequirement: occupancy={}, subOccupancy={}, permissible={}",
                             occupancy, subOccupancy, permissible);
 
                     return permissible;
@@ -216,7 +216,7 @@ public class RoadWidth_Assam extends RoadWidth {
     }
 
     private ScrutinyDetail buildRoadWidthScrutinyDetail() {
-        LOG.debug("Building ScrutinyDetail object for Road Width");
+        LOG.info("Building ScrutinyDetail object for Road Width");
         ScrutinyDetail scrutinyDetail = new ScrutinyDetail();
         scrutinyDetail.setKey(Common_Road_Width);
         scrutinyDetail.addColumnHeading(1, RULE_NO);

@@ -21,13 +21,13 @@ public class BasementExtract extends FeatureExtract {
 
     @Override
     public PlanDetail extract(PlanDetail pl) {
-        LOG.debug("Starting of BasementExtract extract method");
+        LOG.info("Starting of BasementExtract extract method");
         Map<String, Integer> basementFeaturesColor = pl.getSubFeatureColorCodesMaster().get("Basement");
         for (Block b : pl.getBlocks())
             if (b.getBuilding() != null && b.getBuilding().getFloors() != null
                     && !b.getBuilding().getFloors().isEmpty())
                 for (Floor f : b.getBuilding().getFloors()) {
-                    LOG.debug("Base floor: " + f.getNumber());
+                    LOG.info("Base floor: " + f.getNumber());
                     if (f.getNumber() == -1) {
                         String basementFootPrint = layerNames.getLayerName("LAYER_NAME_BLOCK_NAME_PREFIX") + b.getNumber()
                                 + "_" + layerNames.getLayerName("LAYER_NAME_LEVEL_NAME_PREFIX") + f.getNumber()
@@ -70,7 +70,7 @@ public class BasementExtract extends FeatureExtract {
 
                     }
                 }
-        LOG.debug("Ending of BasementExtract extract method");
+        LOG.info("Ending of BasementExtract extract method");
         return pl;
     }
 

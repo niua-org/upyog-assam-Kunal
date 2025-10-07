@@ -522,7 +522,7 @@ public class AdditionalFeature_Assam extends FeatureProcess {
 
                     BigDecimal serviceFloorHeight = BigDecimal.ZERO;
                     if (!block.getBuilding().getServiceFloors().isEmpty()) {
-                        LOG.debug("Checking Service Floor Height...");
+                        LOG.info("Checking Service Floor Height...");
                         for (ServiceFloor serviceFloor : block.getBuilding().getServiceFloors()) {
                             if (serviceFloorHeight.compareTo(serviceFloor.getHeight()) < 0) {
                                 serviceFloorHeight = serviceFloor.getHeight();
@@ -590,7 +590,7 @@ public class AdditionalFeature_Assam extends FeatureProcess {
             if (!pl.getParkingDetails().getStilts().isEmpty() && pl.getPlanInformation().isEarthquakeResistant()) {
                 BigDecimal parkingHeight = pl.getParkingDetails().getStilts().get(0).getHeight();
                 if (parkingHeight.compareTo(additionalFeatureBuildingHeightStiltParking) <= 0) {
-                    LOG.debug("Excluding stilt parking height: " + parkingHeight);
+                    LOG.info("Excluding stilt parking height: " + parkingHeight);
                     totalHeight = totalHeight.subtract(parkingHeight);
                 }
             }
@@ -601,7 +601,7 @@ public class AdditionalFeature_Assam extends FeatureProcess {
             } else {
                 BigDecimal maxTankHeight = block.getRoofTanks().stream().reduce(BigDecimal::max).get();
                 if (maxTankHeight.compareTo(additionalFeatureBuildingHeightRoofTanks) <= 0) {
-                    LOG.debug("Excluding roof tank height: " + maxTankHeight);
+                    LOG.info("Excluding roof tank height: " + maxTankHeight);
                     totalHeight = totalHeight.subtract(maxTankHeight);
                 }
             }
@@ -615,7 +615,7 @@ public class AdditionalFeature_Assam extends FeatureProcess {
                     for (ArchitecturalFeature architecturalFeature : floor.getArchitecturalFeature()) {
                         for (RoomHeight roomHeight : architecturalFeature.getHeights()) {
                             if (maxArchitectureHeight.compareTo(roomHeight.getHeight()) < 0) {
-                                LOG.debug("Found architectural feature height: " + roomHeight.getHeight());
+                                LOG.info("Found architectural feature height: " + roomHeight.getHeight());
                                 maxArchitectureHeight = roomHeight.getHeight();
                             }
                         }
@@ -626,7 +626,7 @@ public class AdditionalFeature_Assam extends FeatureProcess {
                             for (ServiceRoom serviceRoom : floorUnit.getServiceRooms()) {
                                 for (RoomHeight roomHeight : serviceRoom.getHeights()) {
                                     if (maxServiceRoomHeight.compareTo(roomHeight.getHeight()) < 0) {
-                                        LOG.debug("Found service room height: " + roomHeight.getHeight());
+                                        LOG.info("Found service room height: " + roomHeight.getHeight());
                                         maxServiceRoomHeight = roomHeight.getHeight();
                                     }
                                 }
@@ -642,18 +642,18 @@ public class AdditionalFeature_Assam extends FeatureProcess {
                 if(!block.getChimneys().isEmpty()) {
                     BigDecimal maxChimneyHeight = block.getChimneys().stream().reduce(BigDecimal::max).get();
                     if (maxChimneyHeight.compareTo(additionalFeatureBuildingHeightChimney) <= 0) {
-                        LOG.debug("Excluding chimney height: " + maxChimneyHeight);
+                        LOG.info("Excluding chimney height: " + maxChimneyHeight);
                         totalHeight = totalHeight.subtract(maxChimneyHeight);
                     }
                 }
 
                 if (maxArchitectureHeight.compareTo(additionalFeatureBuildingHeightChimney) <= 0) {
-                    LOG.debug("Excluding chimney height: " + maxArchitectureHeight);
+                    LOG.info("Excluding chimney height: " + maxArchitectureHeight);
                     totalHeight = totalHeight.subtract(maxArchitectureHeight);
                 }
                 // Subtracting servicerooms heights such as ventilation, ac and lift rooms
                 if (maxServiceRoomHeight.compareTo(additionalFeatureBuildingHeightServiceRooms) <= 0) {
-                    LOG.debug("Excluding service room height: " + maxServiceRoomHeight);
+                    LOG.info("Excluding service room height: " + maxServiceRoomHeight);
                     totalHeight = totalHeight.subtract(maxServiceRoomHeight);
                 }
             }
@@ -662,7 +662,7 @@ public class AdditionalFeature_Assam extends FeatureProcess {
             if(!block.getStairCovers().isEmpty()) {
                 BigDecimal maxStairCoverHeight = block.getStairCovers().stream().reduce(BigDecimal::max).get();
                 if (maxStairCoverHeight.compareTo(additionalFeatureBuildingHeightStairCovers) <= 0) {
-                    LOG.debug("Excluding stair cover height: " + maxStairCoverHeight);
+                    LOG.info("Excluding stair cover height: " + maxStairCoverHeight);
                     totalHeight = totalHeight.subtract(maxStairCoverHeight);
                 }
             }
@@ -675,7 +675,7 @@ public class AdditionalFeature_Assam extends FeatureProcess {
                     if(rwh.getArea() != null) {
                         rainWaterHarvestArea = rainWaterHarvestArea.add(rwh.getArea());
                         if (rwhHeight.compareTo(rwh.getHeight()) < 0) {
-                            LOG.debug("Found RWH structure height: " + rwh.getHeight());
+                            LOG.info("Found RWH structure height: " + rwh.getHeight());
                             rwhHeight = rwh.getHeight();
                         }
                     }
@@ -686,7 +686,7 @@ public class AdditionalFeature_Assam extends FeatureProcess {
                     if(floor.getRoofAreas() != null) {
                         for (RoofArea roofArea : floor.getRoofAreas()) {
                             if (maxRoofArea.compareTo(roofArea.getArea()) < 0) {
-                                LOG.debug("Found roof area: " + roofArea.getArea());
+                                LOG.info("Found roof area: " + roofArea.getArea());
                                 maxRoofArea = roofArea.getArea();
                             }
                         }
@@ -702,7 +702,7 @@ public class AdditionalFeature_Assam extends FeatureProcess {
                             .allMatch(rwh -> rwh.getHeight().compareTo(additionalFeatureBuildingHeightRWH) <= 0);
 
                     if (roofAreaCheck && rwhHeightCheck) {
-                        LOG.debug("Found roof area: " + coverageRatio + " and RWH height: " + rwhHeight);
+                        LOG.info("Found roof area: " + coverageRatio + " and RWH height: " + rwhHeight);
                         totalHeight = totalHeight.subtract(rwhHeight);
                     }
                 }
@@ -741,7 +741,7 @@ public class AdditionalFeature_Assam extends FeatureProcess {
 
         // Cap front setback at 16m as per regulations
         BigDecimal cappedFrontSetback = frontSetback.min(additionalFeatureBuildingHeightCappedPermitted);
-        LOG.debug("Capped front setback: " + cappedFrontSetback);
+        LOG.info("Capped front setback: " + cappedFrontSetback);
         BigDecimal maxHeight = additionalFeatureBuildingHeightMaxPermitted.multiply(roadWidth.add(cappedFrontSetback));
 
         return maxHeight.setScale(DECIMALDIGITS_MEASUREMENTS, ROUNDMODE_MEASUREMENTS);
@@ -766,7 +766,7 @@ public class AdditionalFeature_Assam extends FeatureProcess {
         }
 
         if (!hasLift) {
-            LOG.debug("Lift not found in building requiring lift.");
+            LOG.info("Lift not found in building requiring lift.");
             errors.put(LIFT_ERROR, LIFT_ERROR_DESC);
             pl.addErrors(errors);
         }

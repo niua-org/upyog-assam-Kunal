@@ -26,83 +26,83 @@ public class KitchenExtract extends FeatureExtract {
     @Override
     public PlanDetail extract(PlanDetail pl) {
         if (LOG.isDebugEnabled())
-            LOG.debug("Starting of Kitchen room Extract......");
+            LOG.info("Starting of Kitchen room Extract......");
         if (pl != null && !pl.getBlocks().isEmpty())
             for (Block block : pl.getBlocks())
                 if (block.getBuilding() != null && !block.getBuilding().getFloors().isEmpty())
                     outside:for (Floor floor : block.getBuilding().getFloors()) {
+/*
+                        if (!block.getTypicalFloor().isEmpty())
+                            for (TypicalFloor tp : block.getTypicalFloor())
+                                if (tp.getRepetitiveFloorNos().contains(floor.getNumber()))
+                                    for (Floor allFloors : block.getBuilding().getFloors())
+                                        if (allFloors.getNumber().equals(tp.getModelFloorNo()))
+                                            if (allFloors.getKitchen() != null) {
+                                                floor.setKitchen(allFloors.getKitchen());
+                                                continue outside;
+                                            }
 
-//                        if (!block.getTypicalFloor().isEmpty())
-//                            for (TypicalFloor tp : block.getTypicalFloor())
-//                                if (tp.getRepetitiveFloorNos().contains(floor.getNumber()))
-//                                    for (Floor allFloors : block.getBuilding().getFloors())
-//                                        if (allFloors.getNumber().equals(tp.getModelFloorNo()))
-//                                            if (allFloors.getKitchen() != null) {
-//                                                floor.setKitchen(allFloors.getKitchen());
-//                                                continue outside;
-//                                            }
-//
-//                        List<DXFLWPolyline> kitchenPolyLines = new ArrayList<>();
-//
-//                        String kitchenLayer = String.format(layerNames.getLayerName("LAYER_NAME_KITCHEN"), block.getNumber(),
-//                                floor.getNumber());
-//                       // List<BigDecimal> kitchenHeight = Util.getListOfDimensionValueByLayer(pl, kitchenLayer);
-//
-//                        List<BigDecimal> kitchenHeight = Util.getListOfDimensionByColourCode(pl, kitchenLayer, DxfFileConstants.KITCHEN_HEIGHT_COLOR);
-//
-//                        List<BigDecimal> kitchenWidth = Util.getListOfDimensionByColourCode(pl, kitchenLayer,
-//        						DxfFileConstants.KITCHEN_WIDTH_COLOR);
-//
-//                        List<DXFLWPolyline> residentialKitchenPolyLines = Util.getPolyLinesByLayerAndColor(pl.getDoc(),
-//                                kitchenLayer, DxfFileConstants.RESIDENTIAL_KITCHEN_ROOM_COLOR, pl);
-//                        List<DXFLWPolyline> residentialKitchenStorePolyLines = Util.getPolyLinesByLayerAndColor(
-//                                pl.getDoc(), kitchenLayer, DxfFileConstants.RESIDENTIAL_KITCHEN_STORE_ROOM_COLOR, pl);
-//                        List<DXFLWPolyline> residentialKitchenDiningPolyLines = Util.getPolyLinesByLayerAndColor(
-//                                pl.getDoc(), kitchenLayer, DxfFileConstants.RESIDENTIAL_KITCHEN_DINING_ROOM_COLOR, pl);
-//                        List<DXFLWPolyline> commercialKitchenPolyLines = Util.getPolyLinesByLayerAndColor(pl.getDoc(),
-//                                kitchenLayer, DxfFileConstants.COMMERCIAL_KITCHEN_ROOM_COLOR, pl);
-//                        List<DXFLWPolyline> commercialKitchenStorePolyLines = Util.getPolyLinesByLayerAndColor(
-//                                pl.getDoc(), kitchenLayer, DxfFileConstants.COMMERCIAL_KITCHEN_STORE_ROOM_COLOR, pl);
-//                        List<DXFLWPolyline> commercialKitchenDiningPolyLines = Util.getPolyLinesByLayerAndColor(
-//                                pl.getDoc(), kitchenLayer, DxfFileConstants.COMMERCIAL_KITCHEN_DINING_ROOM_COLOR, pl);
-//
-//                        if (!residentialKitchenPolyLines.isEmpty())
-//                            kitchenPolyLines.addAll(residentialKitchenPolyLines);
-//                        if (!residentialKitchenStorePolyLines.isEmpty())
-//                            kitchenPolyLines.addAll(residentialKitchenStorePolyLines);
-//                        if (!residentialKitchenDiningPolyLines.isEmpty())
-//                            kitchenPolyLines.addAll(residentialKitchenDiningPolyLines);
-//                        if (!commercialKitchenPolyLines.isEmpty())
-//                            kitchenPolyLines.addAll(commercialKitchenPolyLines);
-//                        if (!commercialKitchenStorePolyLines.isEmpty())
-//                            kitchenPolyLines.addAll(commercialKitchenStorePolyLines);
-//                        if (!commercialKitchenDiningPolyLines.isEmpty())
-//                            kitchenPolyLines.addAll(commercialKitchenDiningPolyLines);
-//
-//                        if (!kitchenHeight.isEmpty() || !kitchenPolyLines.isEmpty()) {
-//                            Room kitchen = new Room();
-//                            List<RoomHeight> kitchenHeights = new ArrayList<>();
-//                            if (!kitchenHeight.isEmpty()) {
-//                                for (BigDecimal height : kitchenHeight) {
-//                                    RoomHeight roomHeight = new RoomHeight();
-//                                    roomHeight.setHeight(height);
-//                                    kitchenHeights.add(roomHeight);
-//                                }
-//                                kitchen.setHeights(kitchenHeights);
-//                            }
-//                            if (!kitchenWidth.isEmpty()) {
-//                                kitchen.setKitchenWidth(kitchenWidth);
-//                            }
-//
-//                            if (kitchenPolyLines != null && !kitchenPolyLines.isEmpty()) {
-//                                List<Measurement> kitchens = kitchenPolyLines.stream()
-//                                        .map(acRoomPolyLine -> new MeasurementDetail(acRoomPolyLine, true))
-//                                        .collect(Collectors.toList());
-//                                kitchen.setRooms(kitchens);
-//                            }
-//                            floor.setKitchen(kitchen);
-//                        }
+                        List<DXFLWPolyline> kitchenPolyLines = new ArrayList<>();
 
+                        String kitchenLayer = String.format(layerNames.getLayerName("LAYER_NAME_KITCHEN"), block.getNumber(),
+                                floor.getNumber());
+                       // List<BigDecimal> kitchenHeight = Util.getListOfDimensionValueByLayer(pl, kitchenLayer);
+
+                        List<BigDecimal> kitchenHeight = Util.getListOfDimensionByColourCode(pl, kitchenLayer, DxfFileConstants.KITCHEN_HEIGHT_COLOR);
+
+                        List<BigDecimal> kitchenWidth = Util.getListOfDimensionByColourCode(pl, kitchenLayer,
+        						DxfFileConstants.KITCHEN_WIDTH_COLOR);
+
+                        List<DXFLWPolyline> residentialKitchenPolyLines = Util.getPolyLinesByLayerAndColor(pl.getDoc(),
+                                kitchenLayer, DxfFileConstants.RESIDENTIAL_KITCHEN_ROOM_COLOR, pl);
+                        List<DXFLWPolyline> residentialKitchenStorePolyLines = Util.getPolyLinesByLayerAndColor(
+                                pl.getDoc(), kitchenLayer, DxfFileConstants.RESIDENTIAL_KITCHEN_STORE_ROOM_COLOR, pl);
+                        List<DXFLWPolyline> residentialKitchenDiningPolyLines = Util.getPolyLinesByLayerAndColor(
+                                pl.getDoc(), kitchenLayer, DxfFileConstants.RESIDENTIAL_KITCHEN_DINING_ROOM_COLOR, pl);
+                        List<DXFLWPolyline> commercialKitchenPolyLines = Util.getPolyLinesByLayerAndColor(pl.getDoc(),
+                                kitchenLayer, DxfFileConstants.COMMERCIAL_KITCHEN_ROOM_COLOR, pl);
+                        List<DXFLWPolyline> commercialKitchenStorePolyLines = Util.getPolyLinesByLayerAndColor(
+                                pl.getDoc(), kitchenLayer, DxfFileConstants.COMMERCIAL_KITCHEN_STORE_ROOM_COLOR, pl);
+                        List<DXFLWPolyline> commercialKitchenDiningPolyLines = Util.getPolyLinesByLayerAndColor(
+                                pl.getDoc(), kitchenLayer, DxfFileConstants.COMMERCIAL_KITCHEN_DINING_ROOM_COLOR, pl);
+
+                        if (!residentialKitchenPolyLines.isEmpty())
+                            kitchenPolyLines.addAll(residentialKitchenPolyLines);
+                        if (!residentialKitchenStorePolyLines.isEmpty())
+                            kitchenPolyLines.addAll(residentialKitchenStorePolyLines);
+                        if (!residentialKitchenDiningPolyLines.isEmpty())
+                            kitchenPolyLines.addAll(residentialKitchenDiningPolyLines);
+                        if (!commercialKitchenPolyLines.isEmpty())
+                            kitchenPolyLines.addAll(commercialKitchenPolyLines);
+                        if (!commercialKitchenStorePolyLines.isEmpty())
+                            kitchenPolyLines.addAll(commercialKitchenStorePolyLines);
+                        if (!commercialKitchenDiningPolyLines.isEmpty())
+                            kitchenPolyLines.addAll(commercialKitchenDiningPolyLines);
+
+                        if (!kitchenHeight.isEmpty() || !kitchenPolyLines.isEmpty()) {
+                            Room kitchen = new Room();
+                            List<RoomHeight> kitchenHeights = new ArrayList<>();
+                            if (!kitchenHeight.isEmpty()) {
+                                for (BigDecimal height : kitchenHeight) {
+                                    RoomHeight roomHeight = new RoomHeight();
+                                    roomHeight.setHeight(height);
+                                    kitchenHeights.add(roomHeight);
+                                }
+                                kitchen.setHeights(kitchenHeights);
+                            }
+                            if (!kitchenWidth.isEmpty()) {
+                                kitchen.setKitchenWidth(kitchenWidth);
+                            }
+
+                            if (kitchenPolyLines != null && !kitchenPolyLines.isEmpty()) {
+                                List<Measurement> kitchens = kitchenPolyLines.stream()
+                                        .map(acRoomPolyLine -> new MeasurementDetail(acRoomPolyLine, true))
+                                        .collect(Collectors.toList());
+                                kitchen.setRooms(kitchens);
+                            }
+                            floor.setKitchen(kitchen);
+                        }
+*/
                         if (!block.getTypicalFloor().isEmpty())
                             for (TypicalFloor tp : block.getTypicalFloor())
                                 if (tp.getRepetitiveFloorNos().contains(floor.getNumber()))
@@ -117,13 +117,13 @@ public class KitchenExtract extends FeatureExtract {
                                         }
 
                         for (FloorUnit floorUnit : floor.getUnits()) {
-                            LOG.debug("Extracting Kitchen data for Block: " + block.getNumber() + " Floor: " + floor.getNumber() + " Unit: " + floorUnit.getUnitNumber());
+                            LOG.info("Extracting Kitchen data for Block: " + block.getNumber() + " Floor: " + floor.getNumber() + " Unit: " + floorUnit.getUnitNumber());
                             extractKitchensData(pl, block, floor, floorUnit);
                         }
                     }
 
         if (LOG.isDebugEnabled())
-            LOG.debug("End of Kitchen Room Extract......");
+            LOG.info("End of Kitchen Room Extract......");
         return pl;
     }
 
@@ -146,7 +146,7 @@ public class KitchenExtract extends FeatureExtract {
 
         List<BigDecimal> kitchenHeight = Util.getListOfDimensionByColourCode(pl, kitchenLayer, DxfFileConstants.KITCHEN_HEIGHT_COLOR);
         List<BigDecimal> kitchenWidth = Util.getListOfDimensionByColourCode(pl, kitchenLayer, DxfFileConstants.KITCHEN_WIDTH_COLOR);
-        LOG.debug("Kitchen Layer: " + kitchenLayer + " Kitchen Heights: " + kitchenHeight + " Kitchen Widths: " + kitchenWidth);
+        LOG.info("Kitchen Layer: " + kitchenLayer + " Kitchen Heights: " + kitchenHeight + " Kitchen Widths: " + kitchenWidth);
 
         List<DXFLWPolyline> residentialKitchenPolyLines = Util.getPolyLinesByLayerAndColor(pl.getDoc(),
                 kitchenLayer, DxfFileConstants.RESIDENTIAL_KITCHEN_ROOM_COLOR, pl);
@@ -161,7 +161,7 @@ public class KitchenExtract extends FeatureExtract {
         List<DXFLWPolyline> commercialKitchenDiningPolyLines = Util.getPolyLinesByLayerAndColor(
                 pl.getDoc(), kitchenLayer, DxfFileConstants.COMMERCIAL_KITCHEN_DINING_ROOM_COLOR, pl);
 
-        LOG.debug("Found - Residential Kitchens: " + residentialKitchenPolyLines.size() +
+        LOG.info("Found - Residential Kitchens: " + residentialKitchenPolyLines.size() +
                 ", Residential Stores: " + residentialKitchenStorePolyLines.size() +
                 ", Residential Dining: " + residentialKitchenDiningPolyLines.size() +
                 ", Commercial Kitchens: " + commercialKitchenPolyLines.size() +
@@ -206,7 +206,7 @@ public class KitchenExtract extends FeatureExtract {
         }
 
         int noOfResidentialKitchens = residentialKitchenPolyLines.size();
-        LOG.debug("No of Residential Kitchens found: " + noOfResidentialKitchens);
+        LOG.info("No of Residential Kitchens found: " + noOfResidentialKitchens);
         pl.setTotalKitchens(BigDecimal.valueOf(noOfResidentialKitchens));
     }
 

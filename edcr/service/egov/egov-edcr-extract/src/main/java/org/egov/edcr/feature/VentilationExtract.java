@@ -27,7 +27,7 @@ public class VentilationExtract extends FeatureExtract {
 
 	@Override
 	public PlanDetail extract(PlanDetail pl) {
-        LOG.debug("Starting of VentilationExtract extract method");
+        LOG.info("Starting of VentilationExtract extract method");
 		for (Block b : pl.getBlocks()) {
 			if (b.getBuilding() != null && b.getBuilding().getFloors() != null
 					&& !b.getBuilding().getFloors().isEmpty()) {
@@ -112,7 +112,7 @@ public class VentilationExtract extends FeatureExtract {
 
                     if(f.getUnits() != null && !f.getUnits().isEmpty())
                         for(FloorUnit floorUnit : f.getUnits()) {
-                            LOG.debug("Processing Ventilation for Block: " + b.getNumber() + " Floor: " + f.getNumber()
+                            LOG.info("Processing Ventilation for Block: " + b.getNumber() + " Floor: " + f.getNumber()
                                     + " Unit: " + floorUnit.getUnitNumber());
 
                             /*
@@ -131,7 +131,7 @@ public class VentilationExtract extends FeatureExtract {
                                                         b.getNumber(), f.getNumber(), floorUnit.getUnitNumber()))));
 
                             }
-                            LOG.debug("Completed general light and ventilation for Block: " + b.getNumber() + " Floor: " + f.getNumber()
+                            LOG.info("Completed general light and ventilation for Block: " + b.getNumber() + " Floor: " + f.getNumber()
                                     + " Unit: " + floorUnit.getUnitNumber());
                             /*
                              * Adding regular room wise light and ventilation
@@ -188,7 +188,7 @@ public class VentilationExtract extends FeatureExtract {
                                     }
                                 }
                             }
-                            LOG.debug("Completed AC room wise light and ventilation for Block: " + b.getNumber() + " Floor: " + f.getNumber()
+                            LOG.info("Completed AC room wise light and ventilation for Block: " + b.getNumber() + " Floor: " + f.getNumber()
                                     + " Unit: " + floorUnit.getUnitNumber());
 
                             // Kitchen and dining ventilation handling via new method
@@ -201,12 +201,12 @@ public class VentilationExtract extends FeatureExtract {
 			}
 		}
 
-        LOG.debug("Ending of VentilationExtract extract method");
+        LOG.info("Ending of VentilationExtract extract method");
 		return pl;
 	}
 	
 	private void handleKitchenDiningVentilation(PlanDetail pl, Block b, Floor f, FloorUnit floorUnit) {
-        LOG.debug("Starting of KitchenDiningVentilation extract method");
+        LOG.info("Starting of KitchenDiningVentilation extract method");
         Room kitchen = floorUnit.getKitchen();
         if (kitchen != null) {
             String kitchenAndDining = String.format(
@@ -214,7 +214,7 @@ public class VentilationExtract extends FeatureExtract {
                     b.getNumber(), f.getNumber(), floorUnit.getUnitNumber(), "+\\d");
 
             List<String> ventilationLayers = Util.getLayerNamesLike(pl.getDoc(), kitchenAndDining);
-            LOG.debug("Kitchen and dining ventilation layers found: {}", ventilationLayers);
+            LOG.info("Kitchen and dining ventilation layers found: {}", ventilationLayers);
 
             if (!ventilationLayers.isEmpty()) {
             	List<BigDecimal> allWindowWidths = new ArrayList<>();
@@ -284,24 +284,24 @@ public class VentilationExtract extends FeatureExtract {
                 }
                 
                 if (!allWindowWidths.isEmpty()) {
-                    LOG.debug("Total kitchen window widths found: {}", allWindowWidths.size());
+                    LOG.info("Total kitchen window widths found: {}", allWindowWidths.size());
                     kitchen.setKitchenWindowWidth(allWindowWidths);
                 }
                 
                 if (!allDoorHeights.isEmpty()) {
-                    LOG.debug("Total kitchen Door height found: {}", allDoorHeights.size());
+                    LOG.info("Total kitchen Door height found: {}", allDoorHeights.size());
                     kitchen.setKitchenDoorHeight(allDoorHeights);
                 }
                 
                 if (!allDoorWidths.isEmpty()) {
-                    LOG.debug("Total kitchen Door widths found: {}", allDoorWidths.size());
+                    LOG.info("Total kitchen Door widths found: {}", allDoorWidths.size());
                     kitchen.setKitchenDoorWidth(allDoorWidths);
                 }
                 
                 
             }
         }
-        LOG.debug("Ending of KitchenDiningVentilation extract method");
+        LOG.info("Ending of KitchenDiningVentilation extract method");
     }
 
     private void handleLaundryRecreationVentilation(PlanDetail pl, Block b, Floor f, FloorUnit floorUnit) {

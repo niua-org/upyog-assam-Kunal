@@ -117,12 +117,12 @@ public class WaterClosets_Assam extends WaterClosets {
 	        return pl;
 	    }
 
-	    LOG.debug("Using WaterClosetsRequirement rule with Height: {}, Area: {}, Width: {}",
+	    LOG.info("Using WaterClosetsRequirement rule with Height: {}, Area: {}, Width: {}",
 	            wcRule.getWaterClosetsHeight(), wcRule.getWaterClosetsArea(), wcRule.getWaterClosetsWidth());
 
 	    for (Block block : pl.getBlocks()) {
 	        if (block.getBuilding() == null || block.getBuilding().getFloors() == null) {
-	            LOG.debug("Skipping block {} as building or floors are null", block.getNumber());
+	            LOG.info("Skipping block {} as building or floors are null", block.getNumber());
 	            continue;
 	        }
 
@@ -130,7 +130,7 @@ public class WaterClosets_Assam extends WaterClosets {
                 if(floor.getUnits() != null && !floor.getUnits().isEmpty())
                     for(FloorUnit floorUnit : floor.getUnits()) {
                         if (!hasValidWaterClosets(floorUnit)) {
-                            LOG.debug("Skipping floor {} and unit {} in block {} due to invalid water closet data", floor.getNumber(), floorUnit.getUnitNumber(), block.getNumber());
+                            LOG.info("Skipping floor {} and unit {} in block {} due to invalid water closet data", floor.getNumber(), floorUnit.getUnitNumber(), block.getNumber());
                             continue;
                         }
 
@@ -138,7 +138,7 @@ public class WaterClosets_Assam extends WaterClosets {
                         BigDecimal minWidth = getMinWidth(floorUnit.getWaterClosets().getRooms());
                         BigDecimal totalArea = getTotalArea(floorUnit.getWaterClosets().getRooms());
 
-                        LOG.debug("Floor {} and FloorUnit {} in block {} - Min Height: {}, Min Width: {}, Total Area: {}",
+                        LOG.info("Floor {} and FloorUnit {} in block {} - Min Height: {}, Min Width: {}, Total Area: {}",
                                 floor.getNumber(), floorUnit.getUnitNumber(), block.getNumber(), minHeight, minWidth, totalArea);
 
                         processWCVentilation(floor, floorUnit, ventScrutinyDetail, pl);
@@ -148,7 +148,7 @@ public class WaterClosets_Assam extends WaterClosets {
                                 minHeight, totalArea, minWidth
                         );
                         dimScrutinyDetail.getDetail().add(dimDetails);
-                        LOG.debug("Added dimension validation details for floor {} in block {}", floor.getNumber(), block.getNumber());
+                        LOG.info("Added dimension validation details for floor {} in block {}", floor.getNumber(), block.getNumber());
                     }
 	        }
 	    }
@@ -161,7 +161,7 @@ public class WaterClosets_Assam extends WaterClosets {
 	}
 
 	private void processWCVentilation(Floor floor, FloorUnit floorUnit, ScrutinyDetail scrutinyDetail, Plan pl) {
-	    LOG.debug("Processing Water Closet Ventilation validation for FloorUnit {}", floorUnit.getUnitNumber());
+	    LOG.info("Processing Water Closet Ventilation validation for FloorUnit {}", floorUnit.getUnitNumber());
 
 	    List<Measurement> wcVentilation = floorUnit.getWaterClosets().getWaterClosetVentialtion();
 
@@ -194,7 +194,7 @@ public class WaterClosets_Assam extends WaterClosets {
 	        requiredArea = rule.getWaterClosetsVentilationArea();
 	        requiredWidth = rule.getWaterClosetsVentilationWidth();
 
-	        LOG.debug("Water closet ventilation requirements from rule - Area: {}, Width: {}", requiredArea, requiredWidth);
+	        LOG.info("Water closet ventilation requirements from rule - Area: {}, Width: {}", requiredArea, requiredWidth);
 	    } else {
 	        LOG.warn("No water closet ventilation rules found in cache");
 	    }
@@ -207,7 +207,7 @@ public class WaterClosets_Assam extends WaterClosets {
 	            .map(Measurement::getWidth)
 	            .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-	    LOG.debug("Provided ventilation area: {}, width: {} for floor {} and Unit {}", providedArea, providedWidth, floor.getNumber(), floorUnit.getUnitNumber());
+	    LOG.info("Provided ventilation area: {}, width: {} for floor {} and Unit {}", providedArea, providedWidth, floor.getNumber(), floorUnit.getUnitNumber());
 
 	    // Area validation
 	    if (requiredArea.compareTo(BigDecimal.ZERO) > 0) {
@@ -238,11 +238,11 @@ public class WaterClosets_Assam extends WaterClosets {
 	    }
 
 	    pl.getReportOutput().getScrutinyDetails().add(scrutinyDetail);
-	    LOG.debug("Completed Water Closet Ventilation validation for floor {}", floor.getNumber());
+	    LOG.info("Completed Water Closet Ventilation validation for floor {}", floor.getNumber());
 	}
 
 	private ScrutinyDetail createScrutinyDetail(String key) {
-	    LOG.debug("Creating ScrutinyDetail with key: {}", key);
+	    LOG.info("Creating ScrutinyDetail with key: {}", key);
 	    ScrutinyDetail detail = new ScrutinyDetail();
 	    detail.setKey(key);
 	    detail.addColumnHeading(1, RULE_NO);
@@ -254,7 +254,7 @@ public class WaterClosets_Assam extends WaterClosets {
 	}
 
 	private Optional<WaterClosetsRequirement> getWaterClosetsRule(Plan pl) {
-	    LOG.debug("Fetching WaterClosetsRequirement from MDMS cache");
+	    LOG.info("Fetching WaterClosetsRequirement from MDMS cache");
 	    List<Object> rules = cache.getFeatureRules(pl, FeatureEnum.WATER_CLOSETS.getValue(), false);
 	    Optional<WaterClosetsRequirement> ruleOpt = rules.stream()
 	            .filter(WaterClosetsRequirement.class::isInstance)
@@ -272,7 +272,7 @@ public class WaterClosets_Assam extends WaterClosets {
 	            && floorUnit.getWaterClosets().getRooms() != null
 	            && !floorUnit.getWaterClosets().getRooms().isEmpty();
 
-	    LOG.debug("FloorUnit {} has valid water closets? {}", floorUnit.getUnitNumber(), hasValid);
+	    LOG.info("FloorUnit {} has valid water closets? {}", floorUnit.getUnitNumber(), hasValid);
 	    return hasValid;
 	}
 
@@ -281,7 +281,7 @@ public class WaterClosets_Assam extends WaterClosets {
 	            .map(RoomHeight::getHeight)
 	            .min(Comparator.naturalOrder())
 	            .orElse(BigDecimal.ZERO);
-	    LOG.debug("Computed minimum height from heights list: {}", minHeight);
+	    LOG.info("Computed minimum height from heights list: {}", minHeight);
 	    return minHeight;
 	}
 
@@ -290,7 +290,7 @@ public class WaterClosets_Assam extends WaterClosets {
 	            .map(Measurement::getWidth)
 	            .min(Comparator.naturalOrder())
 	            .orElse(BigDecimal.ZERO);
-	    LOG.debug("Computed minimum width from rooms list: {}", minWidth);
+	    LOG.info("Computed minimum width from rooms list: {}", minWidth);
 	    return minWidth;
 	}
 
@@ -298,7 +298,7 @@ public class WaterClosets_Assam extends WaterClosets {
 	    BigDecimal totalArea = rooms.stream()
 	            .map(Measurement::getArea)
 	            .reduce(BigDecimal.ZERO, BigDecimal::add);
-	    LOG.debug("Computed total area from rooms list: {}", totalArea);
+	    LOG.info("Computed total area from rooms list: {}", totalArea);
 	    return totalArea;
 	}
 
@@ -327,7 +327,7 @@ public class WaterClosets_Assam extends WaterClosets {
 	            && providedWidth.compareTo(requiredWidth) >= 0);
 	    detail.setStatus(accepted ? Result.Accepted.getResultVal() : Result.Not_Accepted.getResultVal());
 
-	    LOG.debug("Built dimension validation detail: requiredHeight={}, requiredArea={}, requiredWidth={}, providedHeight={}, providedArea={}, providedWidth={}, accepted={}",
+	    LOG.info("Built dimension validation detail: requiredHeight={}, requiredArea={}, requiredWidth={}, providedHeight={}, providedArea={}, providedWidth={}, accepted={}",
 	            requiredHeight, requiredArea, requiredWidth, providedHeight, providedArea, providedWidth, accepted);
 
 	    return mapReportDetails(detail);

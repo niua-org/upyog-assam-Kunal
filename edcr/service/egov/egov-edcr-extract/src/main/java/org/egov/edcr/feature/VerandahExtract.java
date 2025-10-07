@@ -27,7 +27,7 @@ public class VerandahExtract extends FeatureExtract {
 
 	@Override
 	public PlanDetail extract(PlanDetail pl) {
-        LOG.debug("Starting of VerandahExtract extract method");
+        LOG.info("Starting of VerandahExtract extract method");
 		for (Block b : pl.getBlocks()) {
 			if (b.getBuilding() != null && b.getBuilding().getFloors() != null
 					&& !b.getBuilding().getFloors().isEmpty()) {
@@ -39,11 +39,6 @@ public class VerandahExtract extends FeatureExtract {
 						List<Measurement> verandahMeasurements = verandahs.stream()
 								.map(polyline -> new MeasurementDetail(polyline, true)).collect(Collectors.toList());
 						f.getVerandah().setMeasurements(verandahMeasurements);
-
-//						f.getVerandah()
-//								.setHeightOrDepth((Util.getListOfDimensionValueByLayer(pl,
-//										String.format(layerNames.getLayerName("LAYER_NAME_VERANDAH"),
-//												b.getNumber(), f.getNumber()))));
 
 						 String verandahLayer = String.format(layerNames.getLayerName("LAYER_NAME_VERANDAH"),
 		                            b.getNumber(), f.getNumber());
@@ -66,7 +61,7 @@ public class VerandahExtract extends FeatureExtract {
 			}
 		}
 
-        LOG.debug("Ending of VerandahExtract extract method");
+        LOG.info("Ending of VerandahExtract extract method");
 		return pl;
 	}
 

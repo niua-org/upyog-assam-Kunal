@@ -206,7 +206,7 @@ public class Kitchen_Assam extends Kitchen {
 	 */
 	private void processKitchenForFloor(Floor floor, FloorUnit floorUnit, Block block, Plan pl, OccupancyTypeHelper occupancy,
 			Map<String, Integer> heightColors) {
-        LOG.debug("Processing kitchen for Floor: {}, FloorUnit: {}, Block: {}", floor.getNumber(), floorUnit.getUnitNumber(), block.getNumber());
+        LOG.info("Processing kitchen for Floor: {}, FloorUnit: {}, Block: {}", floor.getNumber(), floorUnit.getUnitNumber(), block.getNumber());
 
 		if (floorUnit.getKitchen() == null)
 			return;
@@ -448,7 +448,7 @@ public class Kitchen_Assam extends Kitchen {
      */
     private void setReportOutputDetails(Plan pl, String ruleNo, String ruleDesc, String floor, FloorUnit floorUnit, String expected, String actual,
             String status) {
-        LOG.debug("Setting report details: RuleNo={}, RuleDesc={}, Floor={}, Unit={}, Expected={}, Actual={}, Status={}",
+        LOG.info("Setting report details: RuleNo={}, RuleDesc={}, Floor={}, Unit={}, Expected={}, Actual={}, Status={}",
                 ruleNo, ruleDesc, floor, floorUnit.getUnitNumber(), expected, actual, status);
         ReportScrutinyDetail detail = new ReportScrutinyDetail();
         detail.setRuleNo(ruleNo);

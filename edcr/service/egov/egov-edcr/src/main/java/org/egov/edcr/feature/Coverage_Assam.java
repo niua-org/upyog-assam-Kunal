@@ -129,7 +129,7 @@ public class Coverage_Assam extends FeatureProcess {
 	    LOG.info("Plot area: {}", plotArea);
 
 	    int noOfFloors = 0; // unused but kept as per original
-	    LOG.debug("Initial noOfFloors set to {}", noOfFloors);
+	    LOG.info("Initial noOfFloors set to {}", noOfFloors);
 
 	    Set<OccupancyTypeHelper> occupancyList = extractOccupancyList(pl);
 	    LOG.info("Extracted {} occupancy types from plan", occupancyList.size());
@@ -147,7 +147,7 @@ public class Coverage_Assam extends FeatureProcess {
 	    pl.setCoverage(totalCoverage);
 	    if (pl.getVirtualBuilding() != null) {
 	        pl.getVirtualBuilding().setTotalCoverageArea(totalCoverageArea);
-	        LOG.debug("Set totalCoverageArea {} in virtualBuilding", totalCoverageArea);
+	        LOG.info("Set totalCoverageArea {} in virtualBuilding", totalCoverageArea);
 	    }
 
 	    BigDecimal permissibleCoverageValue = getPermissibleCoverageIfApplicable(pl, plotArea, mostRestrictiveOccupancy);

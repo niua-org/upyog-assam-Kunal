@@ -29,7 +29,7 @@ public class CommonRoomExtract extends FeatureExtract {
 
     @Override
     public PlanDetail extract(PlanDetail planDetail) {
-        LOG.debug("Starting of CommonRoomExtract extract method");
+        LOG.info("Starting of CommonRoomExtract extract method");
         List<DXFLWPolyline> rooms;
         List<DXFLWPolyline> ventilationCR;
         List<Measurement> roomMeasurements;
@@ -42,7 +42,7 @@ public class CommonRoomExtract extends FeatureExtract {
                 for (Floor f : block.getBuilding().getFloors()) {
                     if(f.getUnits() != null && !f.getUnits().isEmpty())
                         for(FloorUnit floorUnit : f.getUnits()) {
-                            LOG.debug("Processing CommonRoom for Block: " + block.getNumber() + " Floor: " + f.getNumber() + " Unit: " + floorUnit.getUnitNumber());
+                            LOG.info("Processing CommonRoom for Block: " + block.getNumber() + " Floor: " + f.getNumber() + " Unit: " + floorUnit.getUnitNumber());
 //                    String layerName = String.format(layerNames.getLayerName("LAYER_NAME_BLK_FLR_WC"), block.getNumber(),
 //                            f.getNumber());
                             String layerName = layerNames.getLayerName("LAYER_NAME_BLOCK_NAME_PREFIX") + block.getNumber() + "_"
@@ -54,11 +54,11 @@ public class CommonRoomExtract extends FeatureExtract {
                                     + layerNames.getLayerName("LAYER_NAME_UNIT_NAME_PREFIX") + floorUnit.getUnitNumber() + "_"
                                     + layerNames.getLayerName("LAYER_NAME_COMMON_ROOM_VENTILATION");
 
-                            LOG.debug("Constructed layer names - Room: {}, Ventilation: {}", layerName, ventilationLayerName);
+                            LOG.info("Constructed layer names - Room: {}, Ventilation: {}", layerName, ventilationLayerName);
 
                             rooms = Util.getPolyLinesByLayer(planDetail.getDoc(), layerName);
                             ventilationCR = Util.getPolyLinesByLayer(planDetail.getDoc(), ventilationLayerName);
-                            LOG.debug("Found {} rooms and {} ventilation areas", rooms.size(), ventilationCR.size());
+                            LOG.info("Found {} rooms and {} ventilation areas", rooms.size(), ventilationCR.size());
 
                             roomMeasurements = rooms.stream()
                                     .map(flightPolyLine -> new MeasurementDetail(flightPolyLine, true)).collect(Collectors.toList());
@@ -77,10 +77,10 @@ public class CommonRoomExtract extends FeatureExtract {
                                 roomHeightsList.add(height);
                             }
                             floorUnit.getCommonRoom().setHeights(roomHeightsList);
-                            LOG.debug("Set {} room heights for unit: {}", roomHeightsList.size(), floorUnit.getUnitNumber());
+                            LOG.info("Set {} room heights for unit: {}", roomHeightsList.size(), floorUnit.getUnitNumber());
                         }
                 }
-        LOG.debug("Ending of CommonRoomExtract extract method");
+        LOG.info("Ending of CommonRoomExtract extract method");
         return planDetail;
     }
 

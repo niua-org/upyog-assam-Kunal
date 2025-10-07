@@ -29,7 +29,7 @@ public class BathRoomWaterClosetsExtract extends FeatureExtract {
 
     @Override
     public PlanDetail extract(PlanDetail planDetail) {
-        LOG.debug("Starting of BathRoomWaterClosetsExtract extract method");
+        LOG.info("Starting of BathRoomWaterClosetsExtract extract method");
         List<DXFLWPolyline> rooms;
         List<Measurement> roomMeasurements;
         List<BigDecimal> roomHeights;
@@ -38,7 +38,7 @@ public class BathRoomWaterClosetsExtract extends FeatureExtract {
         for (Block block : planDetail.getBlocks())
             if (block.getBuilding() != null && block.getBuilding().getFloors() != null)
                 for (Floor f : block.getBuilding().getFloors()) {
-                    LOG.debug("Processing BathRoom for Block: " + block.getNumber() + " Floor: " + f.getNumber());
+                    LOG.info("Processing BathRoom for Block: " + block.getNumber() + " Floor: " + f.getNumber());
                     if(f.getUnits() != null && !f.getUnits().isEmpty())
                         for(FloorUnit floorUnit : f.getUnits()) {
                             String layerName = String.format(layerNames.getLayerName("LAYER_NAME_BLK_FLR_UNIT_WC_BATH"), block.getNumber(),
@@ -61,7 +61,7 @@ public class BathRoomWaterClosetsExtract extends FeatureExtract {
                         }
                 }
 
-        LOG.debug("Ending of BathRoomWaterClosetsExtract extract method");
+        LOG.info("Ending of BathRoomWaterClosetsExtract extract method");
         return planDetail;
     }
 
