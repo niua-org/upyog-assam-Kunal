@@ -531,40 +531,65 @@ public class RampService_Assam extends RampService {
      * @param scrutinyDetail2 scrutiny detail to report results
      */
 
+    /**
+     * Validates ramp slopes against expected values and updates the scrutiny report.
+     *
+     * @param pl                  The plan
+     * @param block               The block containing ramps
+     * @param expectedSlopeOne    The numerator for expected slope calculation
+     * @param divideExpectedSlope The denominator for expected slope calculation
+     * @param rampServiceSlope    The minimum slope value to consider
+     * @param scrutinyDetail2     The scrutiny detail object to update
+     */
+    /**
+     * Validates ramp slopes against expected values and updates the scrutiny report.
+     *
+     * @param pl                  The plan
+     * @param block               The block containing ramps
+     * @param expectedSlopeOne    The numerator for expected slope calculation
+     * @param divideExpectedSlope The denominator for expected slope calculation
+     * @param rampServiceSlope    The minimum slope value to consider
+     * @param scrutinyDetail2     The scrutiny detail object to update
+     */
     private void validateRampSlopes(Plan pl, Block block, BigDecimal expectedSlopeOne,
-            BigDecimal divideExpectedSlope, BigDecimal rampServiceSlopValue,
+            BigDecimal divideExpectedSlope, BigDecimal rampServiceSlope,
             ScrutinyDetail scrutinyDetail2) {
 
         boolean valid = false;
         Map<String, String> mapOfRampNumberAndSlopeValues = new HashMap<>();
-        BigDecimal expectedSlope = expectedSlopeOne.divide(divideExpectedSlope, 2, RoundingMode.HALF_UP);
+        // Convert expected slope to fraction form (rise/run)
+        BigDecimal expectedSlope = expectedSlopeOne.divide(divideExpectedSlope, 2, RoundingMode.HALF_UP); // run/rise
+        BigDecimal expectedSlopeFraction = BigDecimal.ONE.divide(expectedSlope, 2, RoundingMode.HALF_UP); // fraction for comparison
+
+        BigDecimal lastSlopeFraction = BigDecimal.ZERO;
 
         for (DARamp daRamp : block.getDARamps()) {
-            BigDecimal slope = daRamp.getSlope();
-            if (slope != null && slope.compareTo(rampServiceSlopValue) > 0 && expectedSlope != null) {
-                if (slope.compareTo(expectedSlope) <= 0) {
+            BigDecimal slope = daRamp.getSlope(); // run/rise
+            if (slope != null) {
+                BigDecimal slopeFraction = BigDecimal.ONE.divide(slope, 2, RoundingMode.HALF_UP); // convert to fraction
+                lastSlopeFraction = slopeFraction;
+
+                if (slopeFraction.compareTo(expectedSlopeFraction) <= 0) {
                     valid = true;
                     mapOfRampNumberAndSlopeValues.put(DA_RAMP_NUMBER, daRamp.getNumber().toString());
-                    mapOfRampNumberAndSlopeValues.put(SLOPE_STRING, slope.toString());
+                    mapOfRampNumberAndSlopeValues.put(SLOPE_STRING, slopeFraction.toString());
                     break;
                 }
             }
         }
 
-        if (valid) {
-            setReportOutputDetails(pl, SUBRULE_50_C_4_B,
-                    String.format(SUBRULE_50_C_4_B_SLOPE_DESCRIPTION,
-                            mapOfRampNumberAndSlopeValues.get(DA_RAMP_NUMBER)),
-                    expectedSlope.toString(),
-                    mapOfRampNumberAndSlopeValues.get(SLOPE_STRING),
-                    Result.Accepted.getResultVal(), scrutinyDetail2);
-        } else {
-            setReportOutputDetails(pl, SUBRULE_50_C_4_B,
-                    String.format(SUBRULE_50_C_4_B_SLOPE_DESCRIPTION, EMPTY_STRING),
-                    expectedSlope.toString(), LESS_THAN_SLOPE,
-                    Result.Not_Accepted.getResultVal(), scrutinyDetail2);
-        }
+        String providedRampNumber = mapOfRampNumberAndSlopeValues.getOrDefault(DA_RAMP_NUMBER, EMPTY_STRING);
+        String providedSlope = mapOfRampNumberAndSlopeValues.getOrDefault(SLOPE_STRING, lastSlopeFraction.toString());
+
+        setReportOutputDetails(pl, SUBRULE_50_C_4_B,
+                String.format(SUBRULE_50_C_4_B_SLOPE_DESCRIPTION, providedRampNumber),
+                expectedSlope.toString(), // report expected in fraction
+                providedSlope,
+                valid ? Result.Accepted.getResultVal() : Result.Not_Accepted.getResultVal(),
+                scrutinyDetail2);
     }
+
+
     
     private void validateMinHeightEntrance(Plan pl, Block block, BigDecimal requiredMinHeight, ScrutinyDetail scrutinyDetail) {
         for (Floor floor : block.getBuilding().getFloors()) {

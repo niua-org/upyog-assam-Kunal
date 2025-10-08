@@ -6,8 +6,12 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.egov.common.entity.edcr.Block;
 import org.egov.common.entity.edcr.DARamp;
 import org.egov.common.entity.edcr.DARoom;
@@ -31,7 +35,7 @@ public class RampServiceExtract extends FeatureExtract {
 
     @Autowired
     private LayerNames layerNames;
-
+    private static final Logger LOG = LogManager.getLogger(RampServiceExtract.class);
     @Override
     public PlanDetail extract(PlanDetail pl) {
         if (pl != null && !pl.getBlocks().isEmpty())
@@ -138,26 +142,65 @@ public class RampServiceExtract extends FeatureExtract {
         return pl;
     }
 
-	private BigDecimal extractSlope(PlanDetail pl, String rampLayerName) {
-		String text = Util.getMtextByLayerName(pl.getDoc(), rampLayerName);
-		BigDecimal slope = BigDecimal.ZERO;
-		if (text != null && !text.isEmpty() && text.contains("=")) {
-		    String[] textArray = text.split("=", 2);
-		    String slopeText = textArray[1];
-		    if(slopeText!=null) {
-				String[] slopeDividendAndDivisor = slopeText.toUpperCase().split("IN", 2);
-				if (slopeDividendAndDivisor != null && slopeDividendAndDivisor.length == 2
-						&& slopeDividendAndDivisor[0] != null && slopeDividendAndDivisor[1] != null) {
-					slopeDividendAndDivisor[0] = slopeDividendAndDivisor[0].replaceAll("[^\\d.]", "");
-					slopeDividendAndDivisor[1] = slopeDividendAndDivisor[1].replaceAll("[^\\d.]", "");
-					slope = BigDecimal.valueOf(Double.valueOf(slopeDividendAndDivisor[0])).divide(
-							BigDecimal.valueOf(Double.valueOf(slopeDividendAndDivisor[1])), 2, RoundingMode.HALF_UP);
-				}
-		    }
-		}
-		return slope;
-	}
-	
+    /**
+     * Extracts the slope of a ramp from the given DXF layer text.
+     * Expected format in DXF layer: "SLOPE=1 in 12"
+     * 
+     * @param pl The PlanDetail containing the DXF document.
+     * @param rampLayerName The DXF layer name where the slope is defined.
+     * @return The slope as BigDecimal (dividend/divisor). Returns BigDecimal.ZERO if not found or invalid.
+     */
+    /**
+     * Extracts the ramp slope from DXF layer text.
+     * The DXF text is expected in the format: "FLR_HT_M=<height>".
+     * According to the rule, slope = run / rise, where max slope = 1 in 12.
+     *
+     * @param pl The PlanDetail containing the DXF document
+     * @param rampLayerName The DXF layer name
+     * @return Slope as BigDecimal (run/rise). Returns 0 if not found.
+     */
+    private BigDecimal extractSlope(PlanDetail pl, String rampLayerName) {
+        String text = Util.getMtextByLayerName(pl.getDoc(), rampLayerName);
+        BigDecimal slope = BigDecimal.ZERO;
+
+        if (text == null || text.isEmpty()) {
+            LOG.debug("No text found in layer: {}", rampLayerName);
+            return slope;
+        }
+
+        if (!text.contains("=")) {
+            LOG.debug("Text in layer '{}' does not contain '=': {}", rampLayerName, text);
+            return slope;
+        }
+
+        String[] parts = text.split("=", 2);
+        if (parts.length != 2) {
+            LOG.debug("Cannot split text by '=' in layer '{}': {}", rampLayerName, text);
+            return slope;
+        }
+
+        String key = parts[0].trim();
+        String value = parts[1].trim();
+
+        if (!"FLR_HT_M".equalsIgnoreCase(key)) {
+            LOG.debug("Layer '{}' does not contain ramp height info. Found key: {}", rampLayerName, key);
+            return slope;
+        }
+
+        try {
+            BigDecimal rise = new BigDecimal(value);
+            if (rise.compareTo(BigDecimal.ZERO) > 0) {
+                slope = BigDecimal.valueOf(12).divide(rise, 2, RoundingMode.HALF_UP); // run/rise
+                LOG.debug("Extracted ramp slope from layer '{}': FLR_HT_M={} -> slope={}", rampLayerName, rise, slope);
+            }
+        } catch (NumberFormatException ex) {
+            LOG.debug("Failed to parse ramp height in layer '{}': {}", rampLayerName, value, ex);
+        }
+
+        return slope;
+    }
+
+
 	private BigDecimal extractMinEntranceHeight(PlanDetail pl, String rampLayerName) {
 	    String text = Util.getMtextByLayerName(pl.getDoc(), rampLayerName, "ENT_HT");
 	    BigDecimal entranceHeight = BigDecimal.ZERO;
