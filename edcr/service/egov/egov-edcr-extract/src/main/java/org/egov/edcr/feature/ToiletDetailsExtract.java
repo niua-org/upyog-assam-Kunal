@@ -11,6 +11,7 @@ import org.egov.common.entity.edcr.Floor;
 import org.egov.common.entity.edcr.FloorUnit;
 import org.egov.common.entity.edcr.Measurement;
 import org.egov.common.entity.edcr.Toilet;
+import org.egov.common.entity.edcr.TypicalFloor;
 import org.egov.edcr.constants.DxfFileConstants;
 import org.egov.edcr.entity.blackbox.MeasurementDetail;
 import org.egov.edcr.entity.blackbox.PlanDetail;
@@ -48,22 +49,43 @@ public class ToiletDetailsExtract extends FeatureExtract {
                 LOG.debug("Processing Block [{}] with [{}] floors", 
                           block.getNumber(), block.getBuilding().getFloors().size());
 
-                for (Floor floor : block.getBuilding().getFloors()) {
+                outside: for (Floor floor : block.getBuilding().getFloors()) {
                     LOG.debug("Processing Floor [{}] with [{}] units", 
                               floor.getNumber(), floor.getUnits() != null ? floor.getUnits().size() : 0);
 
-                    for (FloorUnit unit : floor.getUnits()) {
-                        LOG.debug("Processing FloorUnit [{}] in Floor [{}], Block [{}]", 
-                                  unit.getUnitNumber(), floor.getNumber(), block.getNumber());
+                    // Handle typical floors for toilets
+                    if (block.getTypicalFloor() != null && !block.getTypicalFloor().isEmpty()) {
+                        for (TypicalFloor tp : block.getTypicalFloor()) {
+                            if (tp.getRepetitiveFloorNos().contains(floor.getNumber())) {
+                                for (Floor modelFloor : block.getBuilding().getFloors()) {
+                                    if (modelFloor.getNumber().equals(tp.getModelFloorNo())) {
+                                        if (modelFloor.getToilet() != null) {
+                                            floor.setToilet(modelFloor.getToilet());
+                                            LOG.debug("Copied toilets from model floor [{}] to floor [{}]", 
+                                                      modelFloor.getNumber(), floor.getNumber());
+                                        }
+                                        continue outside;
+                                    }
+                                }
+                            }
+                        }
+                    }
 
-                        List<Toilet> toilets = extractToilets(planDetail, block, floor, unit);
-                        LOG.debug("Extracted [{}] toilets for Unit [{}]", toilets.size(), unit.getUnitNumber());
+                    // Extract toilets for each unit
+                    if (floor.getUnits() != null) {
+                        for (FloorUnit unit : floor.getUnits()) {
+                            LOG.debug("Processing FloorUnit [{}] in Floor [{}], Block [{}]", 
+                                      unit.getUnitNumber(), floor.getNumber(), block.getNumber());
 
-                        extractVentilation(planDetail, block, floor, unit, toilets);
-                        LOG.debug("Ventilation extraction completed for Unit [{}]", unit.getUnitNumber());
+                            List<Toilet> toilets = extractToilets(planDetail, block, floor, unit);
+                            LOG.debug("Extracted [{}] toilets for Unit [{}]", toilets.size(), unit.getUnitNumber());
 
-                        unit.setToilet(toilets);
-                        LOG.debug("Set toilets for Unit [{}]", unit.getUnitNumber());
+                            extractVentilation(planDetail, block, floor, unit, toilets);
+                            LOG.debug("Ventilation extraction completed for Unit [{}]", unit.getUnitNumber());
+
+                            unit.setToilet(toilets);
+                            LOG.debug("Set toilets for Unit [{}]", unit.getUnitNumber());
+                        }
                     }
                 }
             }
@@ -72,6 +94,7 @@ public class ToiletDetailsExtract extends FeatureExtract {
         LOG.debug("Completed extraction for PlanDetail");
         return planDetail;
     }
+
 
   
     /**

@@ -51,6 +51,10 @@ public class RampServiceExtract extends FeatureExtract {
                     List<Measurement> convertedPolyLines = polyLines.stream()
                             .map(polyLine -> new MeasurementDetail(polyLine, true)).collect(Collectors.toList());
 
+                    List<BigDecimal> daRampWidth = Util.getListOfDimensionByColourCode(pl, rampLayerName,
+        					DxfFileConstants.INDEX_COLOR_TWO);
+                    
+ 
                     if (!polyLines.isEmpty() && polyLines != null && !layerArray[4].isEmpty()
                             && layerArray[4] != null) {
                         DARamp daRamp = new DARamp();
@@ -58,10 +62,14 @@ public class RampServiceExtract extends FeatureExtract {
                         daRamp.setMeasurements(convertedPolyLines);
                         daRamp.setPresentInDxf(true);
                         daRamp.setSlope(slope);
-                        block.addDARamps(daRamp);
+                        if (daRampWidth != null && !daRampWidth.isEmpty()) {
+                            daRamp.setDaRampWidth(daRampWidth);
+                        }
+                    	block.addDARamps(daRamp);
                     	String landingNamePattern = String.format(layerNames.getLayerName("LAYER_NAME_DA_RAMP_LANDING"),
     							block.getNumber(), "+\\d");
 
+                    	
     					addRampLanding(pl, landingNamePattern, daRamp);
                         
                     }
