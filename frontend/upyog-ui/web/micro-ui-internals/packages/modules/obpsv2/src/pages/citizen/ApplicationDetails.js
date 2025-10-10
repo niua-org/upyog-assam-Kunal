@@ -57,6 +57,12 @@ import {
       tenantId,
       filters: { applicationNo: acknowledgementIds },
     });
+    const [hasAccess, setHasAccess] = useState(false);
+    const { roles } = Digit.UserService.getUser().info;
+    useEffect(()=>{
+      const access = roles?.some(role=> role?.code === "BPA_ARCHITECT");
+      setHasAccess(access);
+    }, [roles])
     const [workflowDetails, setWorkflowDetails] = useState(null);
 
     useEffect(() => {
@@ -83,6 +89,8 @@ import {
     const [loader, setLoader] = useState(false);
     let bpa_details = (bpaApplicationDetail && bpaApplicationDetail.length > 0 && bpaApplicationDetail[0]) || {};
     const application = bpa_details;
+    const [isUploading, setIsUploading] = useState(false);
+    const [file, setFile] = useState(null);
     sessionStorage.setItem("bpa", JSON.stringify(application));
   
     const mutation = Digit.Hooks.obpsv2.useBPACreateUpdateApi(tenantId, "update");
@@ -96,6 +104,32 @@ import {
       },
       { enabled: acknowledgementIds ? true : false }
     );
+    useEffect(() => {
+      (async () => {
+        setActionError(null);
+        if (file) {
+          if (file.size >= 5242880) {
+            setActionError(t("CS_MAXIMUM_UPLOAD_SIZE_EXCEEDED"));
+          } else {
+            try {
+              setUploadedFile(null);
+              setIsUploading(true);
+              // TODO: change module in file storage
+              const response = await Digit.UploadServices.Filestorage("OBPSV2", file, Digit.ULBService.getStateId());
+              if (response?.data?.files?.length > 0) {
+                setUploadedFile(response?.data?.files[0]?.fileStoreId);
+              } else {
+                setActionError(t("CS_FILE_UPLOAD_ERROR"));
+              }
+            } catch (err) {
+              setActionError(t("CS_FILE_UPLOAD_ERROR"));
+            } finally {
+              setIsUploading(false);
+            }
+          }
+        }
+      })();
+    }, [file]);
     async function onAssign(selectedAction, comments, type) {
   setPopup(false);
 
@@ -110,7 +144,13 @@ import {
           action: selectedAction,
           comments: comments,
             assignes: null,
-            varificationDocuments: null
+            varificationDocuments: uploadedFile ? [
+              {
+                documentType: file.type,
+                fileName: file?.name,
+                fileStoreId: uploadedFile,
+              },
+            ] : null
         },
       },
     
@@ -125,7 +165,7 @@ import {
     await refetch();
     const updatedWorkflowDetails = await Digit.WorkflowService.getByBusinessId(tenantId, acknowledgementIds);
     setWorkflowDetails(updatedWorkflowDetails);
-    
+    window.location.reload();
     setTimeout(() => setToast(false), 10000);
   } catch (err) {
     console.error("Error while assigning:", err);
@@ -181,6 +221,9 @@ import {
    const Heading = (props) => {
      return <h1 className="heading-m">{props.label}</h1>;
    };
+   const LoadingSpinner = () => (
+    <div className="loading-spinner" />
+  );
    function closeToast() {
     setToast(false);
   }
@@ -625,7 +668,12 @@ import {
           accept=".jpg"
           onUpload={selectfile}
           onDelete={() => setUploadedFile(null)}
-          message={
+          message={isUploading ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <LoadingSpinner />
+                        <span>Uploading...</span>
+                      </div>
+                      ) : 
             uploadedFile
               ? `1 ${t("CS_ACTION_FILEUPLOADED")}`
               : t("CS_ACTION_NO_FILEUPLOADED")
@@ -695,12 +743,13 @@ import {
               />
             )}
             {toast && <Toast label={t(assignResponse ? `CS_ACTION_UPDATE_${selectedAction}_TEXT` : "CS_ACTION_ASSIGN_FAILED")} onClose={closeToast} />}
-             <ActionBar>
+             {hasAccess && <ActionBar>
               {displayMenu && workflowDetails?.ProcessInstances?.[0]?.nextActions ? (
                   <Menu options={workflowDetails?.ProcessInstances?.[0]?.nextActions.map((action) => action.action)} t={t} onSelect={onActionSelect} />
               ) : null}
               <SubmitBar label={t("WF_TAKE_ACTION")} onSubmit={() => setDisplayMenu(!displayMenu)} />
             </ActionBar>
+             }
           </Card>
         </div>
       </React.Fragment>
