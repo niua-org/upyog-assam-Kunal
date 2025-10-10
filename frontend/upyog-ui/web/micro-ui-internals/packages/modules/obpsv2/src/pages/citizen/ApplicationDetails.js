@@ -57,6 +57,12 @@ import {
       tenantId,
       filters: { applicationNo: acknowledgementIds },
     });
+    const [hasAccess, setHasAccess] = useState(false);
+    const { roles } = Digit.UserService.getUser().info;
+    useEffect(()=>{
+      const access = roles?.some(role=> role?.code === "BPA_ARCHITECT");
+      setHasAccess(access);
+    }, [roles])
     const [workflowDetails, setWorkflowDetails] = useState(null);
 
     useEffect(() => {
@@ -737,12 +743,13 @@ import {
               />
             )}
             {toast && <Toast label={t(assignResponse ? `CS_ACTION_UPDATE_${selectedAction}_TEXT` : "CS_ACTION_ASSIGN_FAILED")} onClose={closeToast} />}
-             <ActionBar>
+             {hasAccess && <ActionBar>
               {displayMenu && workflowDetails?.ProcessInstances?.[0]?.nextActions ? (
                   <Menu options={workflowDetails?.ProcessInstances?.[0]?.nextActions.map((action) => action.action)} t={t} onSelect={onActionSelect} />
               ) : null}
               <SubmitBar label={t("WF_TAKE_ACTION")} onSubmit={() => setDisplayMenu(!displayMenu)} />
             </ActionBar>
+             }
           </Card>
         </div>
       </React.Fragment>

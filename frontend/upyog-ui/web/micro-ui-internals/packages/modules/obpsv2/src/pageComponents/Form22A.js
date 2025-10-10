@@ -25,7 +25,7 @@ const Form22A = ({ config, onSelect, userType, formData, value = formData }) => 
   const [proposedPlinthArea, setProposedPlinthArea] = useState(formData?.proposedPlinthArea || formData?.form?.proposedPlinthArea || "");
   const [floorAreaCalculation, setFloorAreaCalculation] = useState(formData?.floorAreaCalculation || formData?.form?.floorAreaCalculation || []);
   const [mezzanineFloorArea, setMezzanineFloorArea] = useState(formData?.mezzanineFloorArea || formData?.form?.mezzanineFloorArea || "");
-  const [deductionCalculation, setDeductionCalculation] = useState(formData?.deductionCalculation || formData?.form?.deductionCalculation || "");
+  const [deductionCalculation, setDeductionCalculation] = useState(formData?.deductionCalculation || formData?.form?.deductionCalculation || 0);
   const [totalFloorAreaAfterDeduction, setTotalFloorAreaAfterDeduction] = useState(formData?.totalFloorAreaAfterDeduction || formData?.form?.totalFloorAreaAfterDeduction || []);
   const [totalFloorAreaBeforeDeduction, setTotalFloorAreaBeforeDeduction] = useState(formData?.totalFloorAreaBeforeDeduction || formData?.form?.totalFloorAreaBeforeDeduction || []);
   const [coverage, setCoverage] = useState(formData?.coverage || formData?.form?.coverage || "");
@@ -102,7 +102,7 @@ const Form22A = ({ config, onSelect, userType, formData, value = formData }) => 
         setExistingPlinthArea(plan?.existingPlinthArea || "");
         setProposedPlinthArea(block?.setBacks?.[0]?.buildingFootPrint?.area || "");
         setMezzanineFloorArea(plan?.mezzanineFloorArea || "");
-        setDeductionCalculation(building?.totalArea?.[0]?.deduction || "");
+        setDeductionCalculation((building?.totalArea?.[0]?.deduction+building?.totalArea?.[0]?.existingDeduction) || 0);
         setCoverage(plan?.coverage || "");
         setFloorAreaRatio(plan?.farDetails?.providedFar || "");
         setFloorAreaCalculation(floorCalcData);
