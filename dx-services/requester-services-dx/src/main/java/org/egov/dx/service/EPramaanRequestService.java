@@ -60,15 +60,15 @@ public class EPramaanRequestService {
     @Autowired
 	private Configurations configurations;
 
-    public static final String SCOPE = "openid";
+   /* public static final String SCOPE = "openid";
     public static final String RESPONSE_TYPE = "code";
     public static final String CPDE_CHALLENGE_METHOD = "S256";
     public static final String GRANT_TYPE = "authorization_code";
     public static final String ISS = "ePramaan";
 
 
-    private static final String CLIENT_ID = "10*****1523";
-    private static final String AES_KEY = "68*********9e" ;
+    private static final String CLIENT_ID = "********";
+    private static final String AES_KEY = "*******";
     //private static final String REDIRECT_URI = "https://assamuat.niua.in/upyog-ui/ePramaan-login/";
     private static final String REDIRECT_URI = "http://localhost:3000/upyog-ui/citizen";//"http://localhost:8082/Epramaan/ProcessAuthCodeAndGetToken";
     private static final String SERVICE_LOGOUT_URI = "http://localhost:3000/upyog-ui/citizen";
@@ -77,7 +77,7 @@ public class EPramaanRequestService {
 
     public static final String AUTH_GRANT_REQUEST_URI = "https://epstg.meripehchaan.gov.in/openid/jwt/processJwtAuthGrantRequest.do";
     public static final String TOKEN_REQUEST_URI = "https://epstg.meripehchaan.gov.in/openid/jwt/processJwtTokenRequest.do";
-    public static final String LOGOUT_URI = "https://epstg.meripehchaan.gov.in/openid/jwt/processOIDCSLORequest.do";
+    public static final String LOGOUT_URI = "https://epstg.meripehchaan.gov.in/openid/jwt/processOIDCSLORequest.do";*/
 
 
 
@@ -147,17 +147,18 @@ public class EPramaanRequestService {
         scope.add(OIDCScopeValue.OPENID);
 
         AuthenticationRequest authenticationRequest =
-                new AuthenticationRequest.Builder(URI.create(AUTH_GRANT_REQUEST_URI), new ClientID(CLIENT_ID))
+                new AuthenticationRequest.Builder(URI.create(configurations.getEpAuthGrantRequestUri()), new ClientID(configurations.getEpClientId()))
                         .scope(scope)
                         .state(stateID)
-                        .redirectionURI(URI.create(REDIRECT_URI))
-                        .endpointURI(URI.create(AUTH_GRANT_REQUEST_URI))
+                        .redirectionURI(URI.create(configurations.getEpRedirectUri()))
+                        .endpointURI(URI.create(configurations.getEpAuthGrantRequestUri()))
                         .codeChallenge(codeVerifier, CodeChallengeMethod.S256)
                         .nonce(nonce)
-                        .responseType(new ResponseType(RESPONSE_TYPE)).build();
+                        .responseType(new ResponseType(configurations.getEpResponseType())).build();
 
-        String inputValue = CLIENT_ID + AES_KEY + stateID + nonce + REDIRECT_URI + SCOPE + authenticationRequest.getCodeChallenge();
-        String apiHmac = hashHMACHex(inputValue, AES_KEY);
+        String inputValue = configurations.getEpClientId() + configurations.getEpAesKey() + stateID + nonce + configurations.getEpRedirectUri()
+                + configurations.getEpScope() + authenticationRequest.getCodeChallenge();
+        String apiHmac = hashHMACHex(inputValue, configurations.getEpAesKey());
         String finalUrl = authenticationRequest.toURI().toString() + "&apiHmac=" + apiHmac;
         //return finalUrl;
         UriComponents uriComponents = UriComponentsBuilder
@@ -277,19 +278,19 @@ public class EPramaanRequestService {
 
         JSONObject data = new JSONObject();
         data.put("code", new String[] { tokenReq.getCode() });
-        data.put("grant_type", new String[] { GRANT_TYPE });
-        data.put("scope", new String[] { SCOPE });
-        data.put("redirect_uri", new String[] { AUTH_GRANT_REQUEST_URI });
-        data.put("request_uri", new String[] { REDIRECT_URI });
+        data.put("grant_type", new String[] {configurations.getEpGrantType() });
+        data.put("scope", new String[] { configurations.getEpScope() });
+        data.put("redirect_uri", new String[] {configurations.getEpAuthGrantRequestUri()  });
+        data.put("request_uri", new String[] {configurations.getEpRedirectUri()  });
         data.put("code_verifier", new String[] { ePramaanData.getCodeVerifier() });
-        data.put("client_id", new String[] { CLIENT_ID });
+        data.put("client_id", new String[] {configurations.getEpClientId() });
 
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity = new HttpEntity<String>(data.toString(), headers);
         log.info("Request to ePramaan Token API: " + data.toString());
-        ResponseEntity<String> responseData = restTemplate.exchange(TOKEN_REQUEST_URI, HttpMethod.POST, entity, String.class);
+        ResponseEntity<String> responseData = restTemplate.exchange(configurations.getEpTokenRequestUri(), HttpMethod.POST, entity, String.class);
         log.info("Response from ePramaan Token API: " + responseData.getBody());
         String jweToken = responseData.getBody();
         SecretKeySpec secretKeySpec = null;
@@ -346,16 +347,16 @@ public class EPramaanRequestService {
         return secretKeySpec;
     }
 
-    public static PublicKey getPublicKey() throws Exception {
+    public PublicKey getPublicKey() throws Exception {
         CertificateFactory certFac = CertificateFactory.getInstance("X.509");
         PublicKey publicKey = null;
         // Load certificate from resources folder
         try (InputStream certStream = Thread.currentThread()
                 .getContextClassLoader()
-                .getResourceAsStream(CERTIFICATE_PATH)) {
+                .getResourceAsStream(configurations.getEpCertificatePath())) {
 
             if (certStream == null) {
-                throw new IllegalArgumentException("Certificate not found at: " + CERTIFICATE_PATH);
+                throw new IllegalArgumentException("Certificate not found at: " + configurations.getEpCertificatePath());
             }
 
             X509Certificate cer = (X509Certificate) certFac.generateCertificate(certStream);

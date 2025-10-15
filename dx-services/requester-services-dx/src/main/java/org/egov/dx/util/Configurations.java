@@ -135,4 +135,45 @@ public class Configurations {
 	@Value("${egov.user.endpoint}")
 	private String userEndpoint;
 
+
+	// ePramaan properties
+	@Value("${epramaan.authGrantRequestUri}")
+	private String epAuthGrantRequestUri;
+
+	@Value("${epramaan.tokenRequestUri}")
+	private String epTokenRequestUri;
+
+	@Value("${epramaan.logoutUri}")
+	private String epLogoutUri;
+
+	@Value("${epramaan.clientId}")
+	private String epClientId;
+
+	@Value("${epramaan.aesKey}")
+	private String epAesKey;
+
+	@Value("${epramaan.redirectUri}")
+	private String epRedirectUri;
+
+	@Value("${epramaan.serviceLogoutUri}")
+	private String epServiceLogoutUri;
+
+	@Value("${epramaan.certificatePath}")
+	private String epCertificatePath;
+
+	@Value("${epramaan.scope}")
+	private String epScope;
+
+	@Value("${epramaan.responseType}")
+	private String epResponseType;
+
+	@Value("${epramaan.codeChallengeMethod}")
+	private String epCodeChallengeMethod;
+
+	@Value("${epramaan.grantType}")
+	private String epGrantType;
+
+	@Value("${epramaan.iss}")
+	private String epIss;
+
 }
