@@ -97,4 +97,15 @@ public class EPramaanRequestController {
 		return new ResponseEntity<>(tokenResponse,HttpStatus.OK);
 	}
 
+    @RequestMapping(value = "/callback", method = RequestMethod.POST)
+    public ResponseEntity<EparmaanReponse> eparmaanCallback(@Valid @RequestBody EparmaanRequest eparmaanRequest)    {
+
+        System.out.println("Eparmaan Callback Request Received: " + eparmaanRequest);
+        String code = eparmaanRequest.getCode();
+        String authToken = eparmaanRequest.getAuthToken();
+
+        EparmaanReponse eparmaanReponse = EparmaanReponse.builder().code(code).authToken(authToken).build();
+        return new ResponseEntity<>(eparmaanReponse, HttpStatus.OK);
+    }
+
 }
