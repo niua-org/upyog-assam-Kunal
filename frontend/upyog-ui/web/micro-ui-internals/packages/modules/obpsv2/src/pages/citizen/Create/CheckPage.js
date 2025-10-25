@@ -247,20 +247,34 @@ const handleDownloadPdf = async (formType) => {
             text={checkForNA(t(areaMapping?.ppAuthority?.code))}
           />
           <Row
+            label={t("CONCERNED_AUTHORITY")}
+            text={checkForNA(t(areaMapping?.concernedAuthority?.code))}
+          />
+          <Row
             label={t("BP_AUTHORITY")}
             text={checkForNA(t(areaMapping?.bpAuthority?.code))}
           />
-          <Row
-            label={t("REVENUE_VILLAGE")}
-            text={checkForNA(t(areaMapping?.revenueVillage?.code))}
-          />
+          {areaMapping?.concernedAuthority?.code === "ULB" && (
+            <>
+              <Row
+                label={t("WARD")}
+                text={checkForNA(t(areaMapping?.ward?.code))}
+              />
+              <Row
+                label={t("REVENUE_VILLAGE")}
+                text={checkForNA(t(areaMapping?.revenueVillage?.code))}
+              />
+            </>
+          )}
+          {areaMapping?.concernedAuthority?.code === "GRAM_PANCHAYAT" && (
+            <Row
+              label={t("VILLAGE_NAME")}
+              text={checkForNA(t(areaMapping?.villageName?.code))}
+            />
+          )}
           <Row
             label={t("MOUZA")}
-            text={checkForNA(t(areaMapping?.mouza?.code) || t(areaMapping?.mouza))}
-          />
-          <Row
-            label={t("WARD")}
-            text={checkForNA(areaMapping?.ward)}
+            text={checkForNA(areaMapping?.mouza)}
           />
         </StatusTable>
 
