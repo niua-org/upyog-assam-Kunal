@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
 
 
 @RestController
@@ -57,28 +56,31 @@ public class EPramaanRequestController {
 
 
     @RequestMapping(value = "/token", method = RequestMethod.POST)
-    public ResponseEntity<TokenResponse> getToken(@Valid @RequestBody TokenRequest tokenRequest) {
+    public ResponseEntity<EPramaanTokenResponse>  getToken(@Valid @RequestBody TokenRequest tokenRequest)    {
 
-        TokenRes tokenRes = null;
+        EPramaanTokenRes tokenRes= null;
         try {
             tokenRes = ePramaanRequestService.getToken(tokenRequest.getTokenReq());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        ResponseInfo responseInfo = ResponseInfoFactory.createResponseInfoFromRequestInfo(tokenRequest.getRequestInfo(), null);
-        TokenResponse tokenResponse = TokenResponse.builder().responseInfo(responseInfo).tokenRes(tokenRes).build();
+        ResponseInfo responseInfo=ResponseInfoFactory.createResponseInfoFromRequestInfo(tokenRequest.getRequestInfo(), null);
+        EPramaanTokenResponse tokenResponse=EPramaanTokenResponse.builder().responseInfo(responseInfo).tokenRes(tokenRes).build();
 
-        return new ResponseEntity<>(tokenResponse, HttpStatus.OK);
+        return new ResponseEntity<>(tokenResponse,HttpStatus.OK);
     }
 
     @RequestMapping(value = "/token/citizen", method = RequestMethod.POST)
-    public ResponseEntity<Object> getTokenCitizen(@Valid @RequestBody TokenRequest tokenRequest) {
+    public ResponseEntity<Object>  getTokenCitizen(@Valid @RequestBody TokenRequest tokenRequest)    {
 
-        TokenRes tokenRes = null;
+        EPramaanTokenRes tokenRes= null;
         tokenRes = ePramaanRequestService.getToken(tokenRequest.getTokenReq());
-        Object user = ePramaanRequestService.getOauthToken(tokenRequest.getRequestInfo(), tokenRes);
+        Object user = ePramaanRequestService.getOauthToken(tokenRequest.getRequestInfo() , tokenRes);
 
-        return new ResponseEntity<>(user, HttpStatus.OK);
+//	ResponseInfo responseInfo=ResponseInfoFactory.createResponseInfoFromRequestInfo(tokenRequest.getRequestInfo(), null);
+//	TokenResponse tokenResponse=TokenResponse.builder().responseInfo(responseInfo).tokenRes(tokenRes).build();
+
+        return new ResponseEntity<>(user,HttpStatus.OK);
     }
 
 
@@ -91,14 +93,12 @@ public class EPramaanRequestController {
     }
 
     @RequestMapping(value = "/callback", method = RequestMethod.POST)
-    public ResponseEntity<EparmaanReponse> eparmaanCallback(@Valid @RequestBody EparmaanRequest eparmaanRequest) {
+    public ResponseEntity<Object> eparmaanCallback(@Valid @RequestBody EparmaanRequest eparmaanRequest) {
 
-        System.out.println("Eparmaan Callback Request Received: " + eparmaanRequest);
-        String code = eparmaanRequest.getCode();
-        String authToken = eparmaanRequest.getAuthToken();
+        log.info("Eparmaan Callback Request Received: " + eparmaanRequest);
 
-        EparmaanReponse eparmaanReponse = EparmaanReponse.builder().code(code).authToken(authToken).build();
-        return new ResponseEntity<>(eparmaanReponse, HttpStatus.OK);
+        Object user = ePramaanRequestService.getToken(eparmaanRequest);
+        return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
 }

@@ -15,7 +15,7 @@ public class EparmaanRequest {
     @JsonProperty("code")
     private String code;
 
-    @JsonProperty("authToken")
-    private  String authToken;
+    @JsonProperty("state")
+    private  String state;
 
 }

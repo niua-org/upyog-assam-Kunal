@@ -264,14 +264,20 @@ const Urls = {
     PGR_Search_AI: "/pgr-ai-services/v1/request/_search",
     PGR_Update_AI:"/pgr-ai-services/v1/request/_update"
   },
-
+//TODO: remove hardcoded url after testing
 digiLocker:{
   authorization:"/requester-services-dx/digilocker/authorization/url",
-  register :"/requester-services-dx/digilocker/authorization/url/citizen",
+  register :"http://localhost:8280/requester-services-dx/digilocker/authorization/url/citizen",
   token:"/requester-services-dx/digilocker/token/citizen",
   issueDoc:"/requester-services-dx/digilocker/issuedfiles",
   uri:"/requester-services-dx/digilocker/file",
   oauth:"/user/digilocker/oauth/token"
+},
+ePramaan: {
+  authorization:"/requester-services-dx/epramaan/authorization/url",
+  register :"http://localhost:8280/requester-services-dx/epramaan/authorization/url",
+  token:"http://localhost:8280/requester-services-dx/epramaan/token/citizen",
+  oauth:"/user/epramaan/oauth/token"
 },
 eSign:{
   pdfUrl:"/requester-services-dx/eSign/process",

@@ -77,7 +77,7 @@ const setCitizenDetail = (userObject, token, tenantId) => {
 
   useEffect(async () => {
     //sessionStorage.setItem("DigiLocker.token1","cf87055822e4aa49b0ba74778518dc400a0277e5")
-    if (window.location.href.includes("code")) {
+    if (localStorage.getItem("epramaanData") == null && window.location.href.includes("code")) {
       let code = window.location.href.split("=")[1].split("&")[0]
       let TokenReq = {
         dlReqRef: localStorage.getItem('code_verfier_register'),
@@ -87,6 +87,21 @@ const setCitizenDetail = (userObject, token, tenantId) => {
       const { ResponseInfo, UserRequest: info, ...tokens } = await Digit.DigiLockerService.token({ TokenReq })
       setUser({ info, ...tokens });
       setCitizenDetail(info, tokens?.access_token, info?.tenantId)
+    }
+
+    if(localStorage.getItem("epramaanData") !== null && window.location.href.includes("code")){
+      let epramaanData=JSON.parse(localStorage.getItem("epramaanData"));
+      console.log("epramaanData", epramaanData);
+      let code = window.location.href.split("=")[1].split("&")[0];
+      console.log("epramaan code", code);
+      let TokenReq = {
+        epramaanData: epramaanData,
+        code: code, module: "SSO"
+
+      };
+      const { ResponseInfo, UserRequest: info, ...tokens } = await Digit.EPramaanService.token({ TokenReq });
+      setUser({ info, ...tokens });
+      setCitizenDetail(info, tokens?.access_token, info?.tenantId);
     }
   }, [])
 useEffect(() => {
