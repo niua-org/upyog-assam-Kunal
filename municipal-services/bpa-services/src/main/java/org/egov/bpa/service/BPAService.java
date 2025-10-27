@@ -16,6 +16,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.egov.bpa.config.BPAConfiguration;
 import org.egov.bpa.repository.BPARepository;
@@ -28,6 +29,7 @@ import org.egov.bpa.web.model.BPA;
 import org.egov.bpa.web.model.BPARequest;
 import org.egov.bpa.web.model.BPASearchCriteria;
 import org.egov.bpa.web.model.Floor;
+import org.egov.bpa.web.model.Workflow;
 import org.egov.bpa.web.model.landInfo.LandInfo;
 import org.egov.bpa.web.model.landInfo.LandSearchCriteria;
 import org.egov.bpa.web.model.user.UserDetailResponse;
@@ -479,25 +481,43 @@ public class BPAService {
          * 4. The action in workflow should be null or empty
          * 5. The role of the logged in user should be CITIZEN
          */
-        if (existingBPA.getRtpDetails() != null  && bpa.getRtpDetails() != null && !existingBPA.getRtpDetails().getRtpUUID().equals(bpa.getRtpDetails().getRtpUUID())){            // Set audit details and update directly without workflow
-            bpaRequest.getBPA().setAuditDetails(searchResult.get(0).getAuditDetails());
-            enrichmentService.enrichBPAUpdateRequest(bpaRequest, null);
-            repository.update(bpaRequest, BPAConstants.RTP_UPDATE);
-            log.info("RTP details updated successfully without workflow for citizen application: {}", bpa.getApplicationNo());
-            return bpaRequest.getBPA();
-        }
 
-        if ("EDIT".equals(bpa.getWorkflow().getAction())) {
-            bpaRequest.getBPA().setAuditDetails(searchResult.get(0).getAuditDetails());
-            enrichmentService.enrichBPAUpdateRequest(bpaRequest, null);
-            wfIntegrator.callWorkFlow(bpaRequest);
-            repository.update(bpaRequest, BPAConstants.UPDATE_ALL_BUILDING_PLAN);
+		bpaRequest.getBPA().setAuditDetails(searchResult.get(0).getAuditDetails());
+
+		String action = Optional.ofNullable(bpa.getWorkflow()).map(Workflow::getAction).orElse("");
+		boolean isRtpChanged = existingBPA.getRtpDetails() != null && bpa.getRtpDetails() != null
+				&& !Objects.equals(existingBPA.getRtpDetails().getRtpUUID(), bpa.getRtpDetails().getRtpUUID());
+
+		if (isRtpChanged) {
+			action = "RTP_IS_CHANGED";
+		}
+
+		switch (action.toUpperCase()) {
+
+		case "RTP_IS_CHANGED":
+			enrichmentService.enrichBPAUpdateRequest(bpaRequest, null);
+			repository.update(bpaRequest, BPAConstants.RTP_UPDATE);
+			log.info("RTP details updated successfully without workflow for citizen application: {}",
+					bpa.getApplicationNo());
+			break;
+
+		case "EDIT":
+			enrichmentService.enrichBPAUpdateRequest(bpaRequest, null);
+			wfIntegrator.callWorkFlow(bpaRequest);
+			repository.update(bpaRequest, BPAConstants.UPDATE_ALL_BUILDING_PLAN);
 			bpaRequest.getBPA().setFloors(floors);
-            addCalculation(bpaRequest);
-            landService.updateLandInfo(bpaRequest);
-            return bpaRequest.getBPA();
-        }
+			addCalculation(bpaRequest);
+			landService.updateLandInfo(bpaRequest);
+			break;
 
+		default:
+			enrichmentService.enrichBPAUpdateRequest(bpaRequest, businessService);
+			wfIntegrator.callWorkFlow(bpaRequest);
+			repository.update(bpaRequest, BPAConstants.UPDATE);
+			break;
+		}
+
+		return bpaRequest.getBPA();
 
       //  Map<String, String> additionalDetails = bpa.getAdditionalDetails() != null ? (Map<String, String>) bpa.getAdditionalDetails()
      //           : new HashMap<String, String>();
@@ -511,13 +531,10 @@ public class BPAService {
 
     //    this.processOcUpdate(applicationType, edcrResponse.get(BPAConstants.PERMIT_NO), bpaRequest, requestInfo, additionalDetails);
 
-        bpaRequest.getBPA().setAuditDetails(searchResult.get(0).getAuditDetails());
 //TODO: check if required as we dont have noc to manage in this current scope of work
       //  nocService.manageOfflineNocs(bpaRequest, mdmsData);
         //Validate payments and noc
        // bpaValidator.validatePreEnrichData(bpaRequest, mdmsData);
-
-        enrichmentService.enrichBPAUpdateRequest(bpaRequest, businessService);
 
        // this.handleRejectSendBackActions(applicationType, bpaRequest, businessService, searchResult, mdmsData, edcrResponse);
     //    String state = workflowService.getCurrentState(bpa.getStatus(), businessService);
@@ -550,24 +567,15 @@ public class BPAService {
             bpa.setWorkflow(workflow);
         }*/
 
-        wfIntegrator.callWorkFlow(bpaRequest);
-        log.info("===> workflow done =>" + bpaRequest.getBPA().getStatus());
-
         //TODO: uncomment this if it is required in future
         //Generate approval no if it is in approved state
       //  enrichmentService.postStatusEnrichment(bpaRequest);
-
-        log.debug("Bpa status is : " + bpa.getStatus());
 
 
         /*
          * if (Arrays.asList(config.getSkipPaymentStatuses().split(",")).contains(bpa.getStatus())) {
          * enrichmentService.skipPayment(bpaRequest); enrichmentService.postStatusEnrichment(bpaRequest); }
          */
-
-
-        repository.update(bpaRequest, BPAConstants.UPDATE);
-        return bpaRequest.getBPA();
 
     }
 
