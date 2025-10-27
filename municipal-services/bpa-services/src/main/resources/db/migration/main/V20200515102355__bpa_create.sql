@@ -216,15 +216,36 @@ CREATE TABLE IF NOT EXISTS ug_bpa_rtp_detail_audit (
 -- ========================================================
 
 
--- First create ENUM types
+-- First create ENUM types if they do not exist
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'planning_permit_authority_enum') THEN
-        CREATE TYPE planning_permit_authority_enum AS ENUM ('DA', 'TACP', 'GMDA', 'CMA');
+        CREATE TYPE planning_permit_authority_enum AS ENUM (
+            'DA', 'TACP', 'GMDA', 'CMA',
+            'NALBARI_DA', 'BARPETA_DA', 'DIBRUGARH_DA', 'TINSUKIA_DA', 'SILCHAR_DA'
+        );
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'building_permit_authority_enum') THEN
-        CREATE TYPE building_permit_authority_enum AS ENUM ('MB', 'GP', 'GMC', 'NGMB');
+        CREATE TYPE building_permit_authority_enum AS ENUM (
+            'MB', 'GP', 'GMC', 'NGMB',
+            'NALBARI_MB', 'PUB_BAHJANI', 'BALITARA_BATAHGILA', 'SARIATOLI', 'CHANDAKUCHI',
+            'UTTAR_PUB_DHARMAPUR', 'MADHYA_BAHJANI', 'HATI_NAMATI', 'DAKSHIN_NALBARI',
+            'UTTAR_PUB_KHATA', 'PUB_NALBARI', 'UPPER_BARBHAG_KHATA', 'DIGHELI', 'NATUN_DEHAR',
+            'PANIGAON', 'GHOGRAPAR', 'SILPOTABORI_LATIMA', 'BARAJOL', 'DIHJARI',
+            'BARPETA_MB', 'PATBAUSHI', 'SUNDARIDIA',
+            'DIBRUGARH_MC', 'RAJABHETA', 'NIZ_MANKOTTA', 'HILOIDHARI', 'MANKOTTA_KHANIKAR',
+            'ROMAI', 'TIMONA', 'MOHANBARI', 'BOKUL', 'MAIJAN', 'NIZ_KANAI', 'MODERKHAT',
+            'LAHOWAL', 'KOTOHA', 'BORPOTHAR', 'JOKAI', 'LEJAI', 'BARBARUA', 'DULIA_KAKOTI',
+            'KALAKHOWA', 'GARUDHORIA', 'BOGIBEEL',
+            'TINSUKIA_MB', 'RONGPURIA', 'BORGURI', 'BOJALTOLI', 'ITAKHULI_CHARIALI',
+            'LAIPULI', 'DIMARUGURI', 'BAPUJI', 'GOTTONG', 'PANITOLA', 'BAREKURI', 'HAPJAN',
+            'JERAI', 'TENGAPANI',
+            'SILCHAR_MC', 'MADHUR_BOND', 'BERENGA', 'BHAGADHAR_BARJURAI', 'AMBIKAPUR',
+            'GHUNGOOR', 'BHANJANTIPUR', 'MEHERPUR', 'KANAKPUR', 'RONGPUR', 'UTTAR_KRISHNAPUR',
+            'DAKSHIN_KRISHNAPUR', 'TUPKHANA', 'GHOUNGOOR', 'BHORAKHAI', 'TARUTAJABARI',
+            'CHENKOORI', 'RAJNAGAR', 'KUMARPARA_NIZJOINAGAR'
+        );
     END IF;
 END$$;
 
@@ -234,6 +255,8 @@ CREATE TABLE IF NOT EXISTS ug_bpa_area_mapping_detail (
     buildingplan_id            VARCHAR(64) NOT NULL,
     district                  VARCHAR(128),
     planning_area             VARCHAR(128),
+    concerned_authority       VARCHAR(128),
+    village_name              VARCHAR(128),
     planning_permit_authority planning_permit_authority_enum NOT NULL,
     building_permit_authority building_permit_authority_enum NOT NULL,
     revenue_village           VARCHAR(128),
@@ -256,6 +279,8 @@ CREATE TABLE IF NOT EXISTS ug_bpa_area_mapping_detail_audit (
     buildingplan_id           VARCHAR(64) NOT NULL,
     district                  VARCHAR(128),
     planning_area             VARCHAR(128),
+    concerned_authority       VARCHAR(128),
+    village_name              VARCHAR(128),
     planning_permit_authority planning_permit_authority_enum NOT NULL,
     building_permit_authority building_permit_authority_enum NOT NULL,
     revenue_village           VARCHAR(128),
