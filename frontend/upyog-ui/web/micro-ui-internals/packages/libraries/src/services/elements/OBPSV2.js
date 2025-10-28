@@ -506,4 +506,17 @@ if (bpa?.additionalDetails?.submitReportinspection_pending?.length) {
       collectionBillDetails: collectionBillDetails,
     };
   },
+
+  gisService: (data) =>
+  Request({
+    url: Urls.obpsv2.gisService,
+    multipartData: data,
+    useCache: false,
+    setTimeParam: false,
+    userService: true,
+    method: "POST",
+    params: {},
+    auth: true,
+    multipartFormData: true,
+  }),
 };

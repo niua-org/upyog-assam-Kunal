@@ -20,7 +20,7 @@ const useInboxTableConfig = ({ parentRoute, onPageSizeChange, formState, totalCo
     useEffect(() => {
         if (showToast || error) {
           const timer = setTimeout(() => {
-            setShowToast(false);
+            setShowToast(null);
             setError(null);
             setToastMessage("");
             setSelectedAction(null);
@@ -192,16 +192,23 @@ const useInboxTableConfig = ({ parentRoute, onPageSizeChange, formState, totalCo
                     />
                 )}
                 {(showToast||error) && !selectedAction && (
-                        <Toast
-                          error={error ? error : null}
-                          label={error ? error : (toastMessage || t(`CS_ACTION_${selectedAction}_SUCCESS`))}
-                          onClose={() => {
-                            setShowToast(false);
+                 <Toast
+                        error={
+                            error 
+                            ? error 
+                            : (typeof showToast === 'object' && showToast?.error) 
+                                ? true 
+                                : null
+                        }
+                        warning={typeof showToast === 'object' && showToast?.warning ? true : null}
+                        label={error ? error : (toastMessage || t(`CS_ACTION_${selectedAction}_SUCCESS`))}
+                        onClose={() => {
+                            setShowToast(null);
                             setError(null);
                             setToastMessage("");
-                          }}
+                        }}
                         />
-                )}
+                    )}
                 </React.Fragment>
                 );
             },
