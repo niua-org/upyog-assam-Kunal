@@ -17,6 +17,8 @@ public class AreaMappingDetail {
     private PlanningPermitAuthorityEnum planningPermitAuthority;
     private BuildingPermitAuthorityEnum buildingPermitAuthority;
     private String revenueVillage;
+    private String villageName;
+    private String concernedAuthority;
     private String mouza;
     private String ward;
 }

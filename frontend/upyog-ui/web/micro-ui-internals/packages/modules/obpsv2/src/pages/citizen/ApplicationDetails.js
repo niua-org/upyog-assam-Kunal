@@ -388,20 +388,34 @@ import {
                 text={t(areaMapping?.planningPermitAuthority) || t("CS_NA")}
               />
               <Row
+                label={t("CONCERNED_AUTHORITY")}
+                text={t(areaMapping?.concernedAuthority) || t("CS_NA")}
+              />
+              <Row
                 label={t("BP_AUTHORITY")}
                 text={t(areaMapping?.buildingPermitAuthority) || t("CS_NA")}
               />
-              <Row
-                label={t("REVENUE_VILLAGE")}
-                text={t(areaMapping?.revenueVillage) || t("CS_NA")}
-              />
+              {areaMapping?.concernedAuthority === "ULB" && (
+                <>
+                  <Row
+                    label={t("WARD")}
+                    text={t(areaMapping?.ward) || t("CS_NA")}
+                  />
+                  <Row
+                    label={t("REVENUE_VILLAGE")}
+                    text={t(areaMapping?.revenueVillage) || t("CS_NA")}
+                  />
+                </>
+              )}
+              {areaMapping?.concernedAuthority === "GRAM_PANCHAYAT" && (
+                <Row
+                  label={t("VILLAGE_NAME")}
+                  text={t(areaMapping?.villageName) || t("CS_NA")}
+                />
+              )}
               <Row
                 label={t("MOUZA")}
-                text={t(areaMapping?.mouza) || t("CS_NA")}
-              />
-              <Row
-                label={t("WARD")}
-                text={t(areaMapping?.ward) || t("CS_NA")}
+                text={areaMapping?.mouza || t("CS_NA")}
               />
             </StatusTable>
   

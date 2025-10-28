@@ -59,6 +59,8 @@ public class BPAQueryBuilder {
                     "       area.planning_permit_authority AS area_planning_permit_authority, " +
                     "       area.building_permit_authority AS area_building_permit_authority, " +
                     "       area.revenue_village AS area_revenue_village, " +
+                    "       area.village_name AS area_village_name, " +
+                    "       area.concerned_authority AS area_concerned_authority, " +
                     "       area.mouza AS area_mouza, " +
                     "       area.ward AS area_ward " +
 

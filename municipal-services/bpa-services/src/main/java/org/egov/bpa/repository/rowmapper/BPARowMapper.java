@@ -178,6 +178,8 @@ public class BPARowMapper implements ResultSetExtractor<List<BPA>> {
 		}
 
 		areaMappingDetail.setRevenueVillage(rs.getString("area_revenue_village"));
+		areaMappingDetail.setVillageName(rs.getString("area_village_name"));
+		areaMappingDetail.setConcernedAuthority(rs.getString("area_concerned_authority"));
 		areaMappingDetail.setMouza(rs.getString("area_mouza"));
 		areaMappingDetail.setWard(rs.getString("area_ward"));
 

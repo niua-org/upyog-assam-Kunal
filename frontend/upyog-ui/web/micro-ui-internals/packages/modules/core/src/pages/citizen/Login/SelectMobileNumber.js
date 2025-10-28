@@ -65,11 +65,23 @@ const SelectMobileNumber = ({ t, onSelect, showRegisterLink, mobileNumber, onMob
   if (isLoading) return <Loader />
   const register = async (e) => {
     const data = await Digit.DigiLockerService.register({ module: "SSO" });
-    e.preventDefault()
-    const redirectUrl = data.redirectURL
-    console.log("data", data)
-    localStorage.setItem("code_verfier_register", data?.dlReqRef)
-    window.location.href = redirectUrl
+    e.preventDefault();
+    
+    const redirectUrl = data.redirectURL;
+    console.log("data", data);
+  //  debugger;
+    localStorage.setItem("code_verfier_register", data?.dlReqRef);
+    window.location.href = redirectUrl;
+  }
+
+  const ePramaanRegister = async (e) => {
+    const data = await Digit.EPramaanService.register({ module: "SSO" });
+    e.preventDefault();
+    const redirectUrl = data.redirectURL;
+    console.log("epramaanData", data);
+    localStorage.setItem("epramaanData", JSON.stringify(data?.epramaanData));
+    //  debugger;
+    window.location.href = redirectUrl;
   }
 
   const Heading = (props) => {
@@ -96,8 +108,9 @@ const SelectMobileNumber = ({ t, onSelect, showRegisterLink, mobileNumber, onMob
     setShowToast(false)
   }
   const setModal=(e)=>{
-    setShowToast(false)   
-    register(e)
+    setShowToast(false);
+   // register(e);  
+    ePramaanRegister(e);
   }
 
   return (
@@ -132,7 +145,7 @@ const SelectMobileNumber = ({ t, onSelect, showRegisterLink, mobileNumber, onMob
           setMdmsConfig={setMdmsConfig}
         />
       </div>)}
-      {/* <div className="col col-md-4  text-md-center p-0" style={{width:"40%", marginTop:"5px"}}>
+      { <div className="col col-md-4  text-md-center p-0" style={{width:"40%", marginTop:"5px"}}>
              <button className="digilocker-btn"type="submit" onClick={(e)=>setShowToast(true)   }><img src="https://meripehchaan.gov.in/assets/img/icon/digi.png" class="mr-2" style={{"width":"12%"}}></img>Register/Login with DigiLocker</button>
      { showToast &&   <Modal
       headerBarMain={<Heading label={t("Consent")} />}
@@ -144,11 +157,11 @@ const SelectMobileNumber = ({ t, onSelect, showRegisterLink, mobileNumber, onMob
       formId="modal-action"
     > <div style={{ width: "100%" }}>
     <Card>
-      <p>By selecting this option, I am providing my consent to associate my Upyog account with my DigiLocker ID</p>
+      <p>By selecting this option, I am providing my consent to associate my Upyog account with my Eparman</p>
     </Card>
      </div>
       </Modal>}
-                </div> */}
+                </div> }
     </FormStep>
   );
 };

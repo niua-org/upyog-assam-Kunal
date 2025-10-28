@@ -19,6 +19,7 @@ import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.request.RequestInfo;
+import org.egov.dx.repository.EPramaanMapper;
 import org.egov.dx.util.Configurations;
 import org.egov.dx.web.models.*;
 import org.json.JSONObject;
@@ -33,6 +34,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import javax.validation.Valid;
 import java.io.*;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -51,14 +53,19 @@ import java.util.*;
 @Slf4j
 public class EPramaanRequestService {
 
-      
+
     private static final User User = null;
 
-	@Autowired
+    @Autowired
     private RestTemplate restTemplate;
 
     @Autowired
-	private Configurations configurations;
+    private Configurations configurations;
+
+    @Autowired
+    private EPramaanMapper ePramaanMapper;
+
+    private static Map<String, EPramaanData> stateCodeMap = new HashMap<>();
 
    /* public static final String SCOPE = "openid";
     public static final String RESPONSE_TYPE = "code";
@@ -139,9 +146,9 @@ public class EPramaanRequestService {
         return uriComponents.toUri();*/
 
         //1. save codeVerifier, stateID, nonce in db
-       State stateID = new State(UUID.randomUUID().toString());
-       Nonce nonce = new Nonce();
-       CodeVerifier codeVerifier = new CodeVerifier();
+        State stateID = new State(UUID.randomUUID().toString());
+        Nonce nonce = new Nonce();
+        CodeVerifier codeVerifier = new CodeVerifier();
 
         Scope scope = new Scope();
         scope.add(OIDCScopeValue.OPENID);
@@ -165,13 +172,17 @@ public class EPramaanRequestService {
                 .fromHttpUrl(finalUrl)
                 .build();
 
+        EPramaanData ePramaanData = EPramaanData.builder()
+                .codeVerifier(codeVerifier.getValue())
+                .nonce(nonce.getValue())
+                .state(stateID.getValue())
+                .build();
+
         AuthResponse authResponse = AuthResponse.builder()
                 .redirectURL(uriComponents.toUri().toString())
-                .epramaanData(EPramaanData.builder()
-                                .codeVerifier(codeVerifier.getValue())
-                                .nonce(nonce.getValue())
-                                .state(stateID.getValue())
-                                .build()).build();
+                .epramaanData(ePramaanData).build();
+
+        stateCodeMap.put(stateID.getValue(), ePramaanData);
 
         return authResponse;
     }
@@ -234,45 +245,45 @@ public class EPramaanRequestService {
 
 
     private String getCodeChallenge(AuthResponse authResponse) throws NoSuchAlgorithmException
-    {     
-    	String codeVerifier=getCodeVerifier();     
-    	log.info("verifier is: " +codeVerifier ); 
-    	//authResponse.setDlReqRef(codeVerifier);  
-    	MessageDigest digest = MessageDigest.getInstance("SHA-256");     
-    	byte[] hash = digest.digest(codeVerifier.getBytes(StandardCharsets.UTF_8));     
-    	String encoded = Base64.getEncoder().withoutPadding().encodeToString(hash);     
-    	encoded = encoded.replace("+", "-"); //Replace ’+’ with ’-’     
-    	encoded= encoded.replace("/", "_");     
-    	log.info("challenge is: " +encoded );        
-    	EncReqObject encReqObject = EncReqObject.builder().tenantId("pg").type("Normal").value(codeVerifier).build();        
-    	EncryptionRequest encryptionRequest = EncryptionRequest.builder().encryptionRequests(Collections.singletonList(encReqObject)).build();        
-    	String responseBody= restTemplate.postForEntity(configurations.getEncHost() + configurations.getEncEncryptURL(), encryptionRequest, String.class).getBody();     
+    {
+        String codeVerifier=getCodeVerifier();
+        log.info("verifier is: " +codeVerifier );
+        //authResponse.setDlReqRef(codeVerifier);
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hash = digest.digest(codeVerifier.getBytes(StandardCharsets.UTF_8));
+        String encoded = Base64.getEncoder().withoutPadding().encodeToString(hash);
+        encoded = encoded.replace("+", "-"); //Replace ’+’ with ’-’
+        encoded= encoded.replace("/", "_");
+        log.info("challenge is: " +encoded );
+        EncReqObject encReqObject = EncReqObject.builder().tenantId("pg").type("Normal").value(codeVerifier).build();
+        EncryptionRequest encryptionRequest = EncryptionRequest.builder().encryptionRequests(Collections.singletonList(encReqObject)).build();
+        String responseBody= restTemplate.postForEntity(configurations.getEncHost() + configurations.getEncEncryptURL(), encryptionRequest, String.class).getBody();
         try {
-       	    String value = new ObjectMapper().readValue(responseBody, String[].class)[0];
-       	 authResponse.setDlReqRef(value);
-       	} catch (Exception e) {
-       	    e.printStackTrace();
-       	}
-    	return encoded;              
-    	}
-    
+            String value = new ObjectMapper().readValue(responseBody, String[].class)[0];
+            authResponse.setDlReqRef(value);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return encoded;
+    }
+
     private String getCodeVerifier()
     {
-    	 int leftLimit = 45; // numeral '0'
-    	    int rightLimit = 126; // letter 'z'
-    	    int targetStringLength = 60;
-    	    Random random = new Random();
+        int leftLimit = 45; // numeral '0'
+        int rightLimit = 126; // letter 'z'
+        int targetStringLength = 60;
+        Random random = new Random();
 
-    	    String generatedString = random.ints(leftLimit, rightLimit + 1)
-    	      .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 95) && i!=47 && i!=96 && i!=123 && i!=124 && i!=125)
-    	      .limit(targetStringLength)
-    	      .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-    	      .toString();
+        String generatedString = random.ints(leftLimit, rightLimit + 1)
+                .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 95) && i!=47 && i!=96 && i!=123 && i!=124 && i!=125)
+                .limit(targetStringLength)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
 
-    	    return generatedString;
+        return generatedString;
     }
-    
-    public TokenRes getToken(TokenReq tokenReq) {
+
+    public EPramaanTokenRes getToken(TokenReq tokenReq) {
 
         EPramaanData ePramaanData = tokenReq.getEPramaanData();
 
@@ -328,14 +339,18 @@ public class EPramaanRequestService {
             log.error("Error in verifying JWS signature: ", e);
             throw new RuntimeException(e);
         }
-        Map<String, Object> objectObjectMap;
+        Map<String, Object> objectObjectMap = null;
         if (signatureVerified) {
             Map<String, Object> JWS = signedJWT.getPayload().toJSONObject();
             System.out.println("JWT: " + JWS);
             objectObjectMap = signedJWT.getPayload().toJSONObject();
             log.info("Token Response from ePramaan: " + objectObjectMap);
         }
-         return new TokenRes();
+        if(objectObjectMap == null) {
+            throw new RuntimeException("Invalid ePramaan token");
+        }
+        EPramaanTokenRes ePramaanTokenRes = ePramaanMapper.mapClaimsToResponse(objectObjectMap);
+        return ePramaanTokenRes;
     }
 
     public Key generateAES256Key(String seed) throws Exception {
@@ -363,82 +378,82 @@ public class EPramaanRequestService {
             publicKey = cer.getPublicKey();
         }
 
-       // FileInputStream fis = new FileInputStream(CERTIFICATE_PATH);
+        // FileInputStream fis = new FileInputStream(CERTIFICATE_PATH);
 
         return publicKey;
     }
-    
-    
+
+
     public UserRes getUser(TokenReq tokenReq)
     {
-    	
-    	 HttpHeaders headers = new HttpHeaders();
-         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-         headers.set("Authorization", "Bearer "+tokenReq.getAuthToken());
-      
 
-         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(null,
-                 headers);
-         UserRes userRes= restTemplate.postForEntity(configurations.getApiHost() + configurations.getUserOauthURI(), request, UserRes.class).getBody();
-         return userRes;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.set("Authorization", "Bearer "+tokenReq.getAuthToken());
+
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(null,
+                headers);
+        UserRes userRes= restTemplate.postForEntity(configurations.getApiHost() + configurations.getUserOauthURI(), request, UserRes.class).getBody();
+        return userRes;
     }
 
     public  List<IssuedDocument> getIssuedDocument(TokenReq tokenReq)
     {
-    	
-    	 HttpHeaders headers = new HttpHeaders();
-         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-         headers.set("Authorization", "Bearer "+tokenReq.getAuthToken());
-         
-         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(null,
-                 headers);
-         IssuedDocumentList issuedDocumentList= restTemplate.postForEntity(configurations.getApiHost() + configurations.getIssuedFilesURI(), request, IssuedDocumentList.class).getBody();
-         return issuedDocumentList.getItems();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.set("Authorization", "Bearer "+tokenReq.getAuthToken());
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(null,
+                headers);
+        IssuedDocumentList issuedDocumentList= restTemplate.postForEntity(configurations.getApiHost() + configurations.getIssuedFilesURI(), request, IssuedDocumentList.class).getBody();
+        return issuedDocumentList.getItems();
     }
     public byte[] getDoc(TokenReq tokenReq,String uri)
     {
-    	
-    	 HttpHeaders headers = new HttpHeaders();
-         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-         headers.set("Authorization", "Bearer "+tokenReq.getAuthToken());
-         headers.set("Authorization", "Bearer "+tokenReq.getAuthToken());
-         MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
 
-         map.add("uri",uri);
-      
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.set("Authorization", "Bearer "+tokenReq.getAuthToken());
+        headers.set("Authorization", "Bearer "+tokenReq.getAuthToken());
+        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
 
-         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(null,
-                 headers);
-         //MultipartFile doc= restTemplate.getForEntity(configurations.getApiHost() + configurations.getGetFileURI()+"/"+uri, request);
-         ResponseEntity<String> entity = restTemplate.exchange(configurations.getApiHost() + configurations.getGetFileURI()+"/"+uri, HttpMethod.GET, 
-                 request, String.class);
-               
-         
-         return entity.getBody().getBytes();
+        map.add("uri",uri);
+
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(null,
+                headers);
+        //MultipartFile doc= restTemplate.getForEntity(configurations.getApiHost() + configurations.getGetFileURI()+"/"+uri, request);
+        ResponseEntity<String> entity = restTemplate.exchange(configurations.getApiHost() + configurations.getGetFileURI()+"/"+uri, HttpMethod.GET,
+                request, String.class);
+
+
+        return entity.getBody().getBytes();
     }
 
-    public Object getOauthToken(RequestInfo requestinfo , TokenRes tokenRes)
+    public Object getOauthToken(RequestInfo requestinfo , EPramaanTokenRes tokenRes)
     {
         RestTemplate restTemplate = new RestTemplate();
         UserRequest user = new UserRequest();
-        user.setMobileNumber(tokenRes.getMobile());
+        user.setMobileNumber(tokenRes.getMobileNumber());
         user.setName(tokenRes.getName());
-        user.setDigilockerid(tokenRes.getDigilockerId());
+        user.setDigilockerid(tokenRes.getEpramaanId());
         //TODO: remove hard coded tenant id
         user.setTenantId("pg");
-        user.setAccess_token(tokenRes.getAccessToken());
+        user.setAccess_token(tokenRes.getSessionId());
         //user.setDob(tokenRes.getDob());
-        
+
         CreateUserRequest createUserRequest = new CreateUserRequest();
         createUserRequest.setRequestInfo(requestinfo);
         createUserRequest.setUser(user);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        
+
         Object userOauth= restTemplate.postForEntity(configurations.getUserHost() + configurations.getUserEndpoint(), createUserRequest, Object.class).getBody();
         return userOauth;
     }
-    
+
     public HttpEntity<String> decryptReq(List<String> decReqObject){
         HttpHeaders decryptHeaders = new HttpHeaders();
         decryptHeaders.setContentType(MediaType.APPLICATION_JSON);
@@ -452,6 +467,21 @@ public class EPramaanRequestService {
 
         return new HttpEntity<String>(jsonPayload, decryptHeaders);
 
+    }
+
+    public EPramaanTokenRes getToken(@Valid EparmaanRequest eparmaanRequest) {
+        String stateId = eparmaanRequest.getState();
+        log.info("State ID received in callback: " + stateId);
+        EPramaanData ePramaanData = stateCodeMap.get(stateId);
+        TokenReq tokenReq = TokenReq.builder()
+                .code(eparmaanRequest.getCode())
+                .ePramaanData(ePramaanData)
+                .build();
+
+        EPramaanTokenRes tokenRes = getToken(tokenReq);
+        //TODO: see how to pass token id here to getOauthToken method
+        Object user = getOauthToken(null , tokenRes);
+        return  tokenRes;
     }
 
 

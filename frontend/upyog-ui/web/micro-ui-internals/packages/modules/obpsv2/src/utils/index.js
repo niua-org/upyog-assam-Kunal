@@ -135,12 +135,18 @@ export const bpaPayload = async(data) => {
       areaMapping: {
         buildingPermitAuthority: data?.areaMapping?.bpAuthority?.code,
         district: data?.areaMapping?.district?.code,
-        mouza: data?.areaMapping?.mouza?.code || data?.areaMapping?.mouza,
+        mouza: data?.areaMapping?.mouza,
         planningArea: data?.areaMapping?.planningArea?.code,
         planningPermitAuthority: data?.areaMapping?.ppAuthority?.code,
-        revenueVillage: data?.areaMapping?.revenueVillage?.code,
-        ward: data?.areaMapping?.ward,
-      },
+        concernedAuthority: data?.areaMapping?.concernedAuthority?.code,
+        ...(data?.areaMapping?.concernedAuthority?.code === "ULB" && {
+          revenueVillage: data?.areaMapping?.revenueVillage?.code,
+          ward: data?.areaMapping?.ward?.code,
+        }),
+        ...(data?.areaMapping?.concernedAuthority?.code === "GRAM_PANCHAYAT" && {
+          villageName: data?.areaMapping?.villageName?.code,
+        }),
+      },      
 
       rtpDetails: {
         rtpCategory: data?.land?.rtpCategory?.code,
@@ -266,11 +272,17 @@ export const bpaEditPayload = async (formData) => {
       ...updated.areaMapping,
       district: formData.areaMapping.district?.code ?? updated.areaMapping.district,
       planningArea: formData.areaMapping.planningArea?.code ?? updated.areaMapping.planningArea,
-      ward: formData.areaMapping.ward ?? updated.areaMapping.ward,
-      mouza: (formData.areaMapping.mouza?.code ? formData.areaMapping.mouza?.code : formData.areaMapping.mouza) ?? (updated.areaMapping.mouza?.code ? updated.areaMapping.mouza?.code : updated.areaMapping.mouza),
-      revenueVillage: (formData.areaMapping.revenueVillage?.code ? formData.areaMapping.revenueVillage?.code : formData.areaMapping.revenueVillage) ?? (updated.areaMapping.revenueVillage?.code ? updated?.areaMapping?.revenueVillage?.code : updated?.areaMapping?.revenueVillage),
-      buildingPermitAuthority: formData.areaMapping.buildingPermitAuthority ?? (updated.areaMapping.buildingPermitAuthority?.code ? updated.areaMapping.buildingPermitAuthority?.code : updated.areaMapping.buildingPermitAuthority),
-      planningPermitAuthority: (formData.areaMapping.ppAuthority?.code ? formData.areaMapping.ppAuthority?.code : formData.areaMapping.ppAuthority) ?? (updated.areaMapping.planningPermitAuthority?.code ? updated.areaMapping.planningPermitAuthority?.code : updated.areaMapping.planningPermitAuthority)
+      planningPermitAuthority: formData.areaMapping.ppAuthority?.code ?? updated.areaMapping.planningPermitAuthority,
+      concernedAuthority: formData.areaMapping.concernedAuthority?.code ?? updated.areaMapping.concernedAuthority,
+      buildingPermitAuthority: formData.areaMapping.bpAuthority?.code ?? updated.areaMapping.buildingPermitAuthority,
+      mouza: formData.areaMapping.mouza ?? updated.areaMapping.mouza,
+      ...(formData.areaMapping.concernedAuthority?.code === "ULB" && {
+        ward: formData.areaMapping.ward?.code ?? updated.areaMapping.ward,
+        revenueVillage: formData.areaMapping.revenueVillage?.code ?? updated.areaMapping.revenueVillage,
+      }),
+      ...(formData.areaMapping.concernedAuthority?.code === "GRAM_PANCHAYAT" && {
+        villageName: formData.areaMapping.villageName?.code ?? updated.areaMapping.villageName,
+      }),
     };
   }
   if (formData?.land?.rtpCategory || formData?.land?.registeredTechnicalPerson) {

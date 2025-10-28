@@ -89,9 +89,9 @@ serviceMaps:
         - query: >
             INSERT INTO public.ug_bpa_area_mapping_detail
             (id, buildingplan_id, district, planning_area, planning_permit_authority,
-             building_permit_authority, revenue_village, mouza, ward,
+             building_permit_authority, revenue_village, village_name, concerned_authority, mouza, ward,
              created_by, last_modified_by, created_time, last_modified_time)
-            VALUES (?, ?, ?, ?, ?::planning_permit_authority_enum, ?::building_permit_authority_enum, ?, ?, ?, ?, ?, ?, ?);
+            VALUES (?, ?, ?, ?, ?::planning_permit_authority_enum, ?::building_permit_authority_enum, ?, ?, ?, ?, ?, ?, ?, ?, ?);
           basePath: BPA.areaMapping
           jsonMaps:
             - jsonPath: $.BPA.areaMapping.id
@@ -101,6 +101,8 @@ serviceMaps:
             - jsonPath: $.BPA.areaMapping.planningPermitAuthority
             - jsonPath: $.BPA.areaMapping.buildingPermitAuthority
             - jsonPath: $.BPA.areaMapping.revenueVillage
+            - jsonPath: $.BPA.areaMapping.villageName
+            - jsonPath: $.BPA.areaMapping.concernedAuthority
             - jsonPath: $.BPA.areaMapping.mouza
             - jsonPath: $.BPA.areaMapping.ward
             - jsonPath: $.BPA.auditDetails.createdBy
@@ -259,6 +261,8 @@ serviceMaps:
               planning_permit_authority = ?::planning_permit_authority_enum, 
               building_permit_authority = ?::building_permit_authority_enum, 
               revenue_village = ?, 
+              village_name = ?,
+              concerned_authority = ?, 
               mouza = ?, 
               ward = ?, 
               last_modified_by = ?, 
@@ -271,6 +275,8 @@ serviceMaps:
             - jsonPath: $.BPA.areaMapping.planningPermitAuthority
             - jsonPath: $.BPA.areaMapping.buildingPermitAuthority
             - jsonPath: $.BPA.areaMapping.revenueVillage
+            - jsonPath: $.BPA.areaMapping.villageName
+            - jsonPath: $.BPA.areaMapping.concernedAuthority
             - jsonPath: $.BPA.areaMapping.mouza
             - jsonPath: $.BPA.areaMapping.ward
             - jsonPath: $.BPA.auditDetails.lastModifiedBy

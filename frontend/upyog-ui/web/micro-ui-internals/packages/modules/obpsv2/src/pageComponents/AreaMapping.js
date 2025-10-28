@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Fragment } from "react";
 import { FormStep, CardLabel, Dropdown, TextInput } from "@upyog/digit-ui-react-components";
 
 const AreaMapping = ({ t, config, onSelect, formData, searchResult }) => {
@@ -7,9 +7,11 @@ const AreaMapping = ({ t, config, onSelect, formData, searchResult }) => {
   const [districts, setDistricts] = useState([]);
   const [planningAreas, setPlanningAreas] = useState([]);
   const [ppAuthorities, setPpAuthorities] = useState([]);
+  const [concernedAuthorities, setConcernedAuthorities] = useState([]);
   const [bpAuthorities, setBpAuthorities] = useState([]);
   const [revenueVillages, setRevenueVillages] = useState([]);
-  const [mouzas, setMouzas] = useState([]);
+  const [wards, setWards] = useState([]);
+  const [villages, setVillages] = useState([]);
   
  // State for all dropdown values
 const [district, setDistrict] = useState(formData?.areaMapping?.district || (searchResult?.areaMapping?.district ? { code: searchResult.areaMapping.district, name: searchResult.areaMapping.district, i18nKey: searchResult.areaMapping.district } : ""));
@@ -18,13 +20,17 @@ const [planningArea, setPlanningArea] = useState(formData?.areaMapping?.planning
 
 const [ppAuthority, setPpAuthority] = useState(formData?.areaMapping?.ppAuthority || (searchResult?.areaMapping?.planningPermitAuthority ? { code: searchResult.areaMapping.planningPermitAuthority, name: searchResult.areaMapping.planningPermitAuthority, i18nKey: searchResult.areaMapping.planningPermitAuthority } : ""));
 
+const [concernedAuthority, setConcernedAuthority] = useState(formData?.areaMapping?.concernedAuthority || (searchResult?.areaMapping?.concernedAuthority ? { code: searchResult.areaMapping.concernedAuthority, name: searchResult.areaMapping.concernedAuthority, i18nKey: searchResult.areaMapping.concernedAuthority } : ""));
+
 const [bpAuthority, setBpAuthority] = useState(formData?.areaMapping?.bpAuthority || (searchResult?.areaMapping?.buildingPermitAuthority ? { code: searchResult.areaMapping.buildingPermitAuthority, name: searchResult.areaMapping.buildingPermitAuthority, i18nKey: searchResult.areaMapping.buildingPermitAuthority } : ""));
 
 const [revenueVillage, setRevenueVillage] = useState(formData?.areaMapping?.revenueVillage || (searchResult?.areaMapping?.revenueVillage ? { code: searchResult.areaMapping.revenueVillage, name: searchResult.areaMapping.revenueVillage, i18nKey: searchResult.areaMapping.revenueVillage } : ""));
 
-const [mouza, setMouza] = useState(formData?.areaMapping?.mouza || (searchResult?.areaMapping?.mouza ? { code: searchResult.areaMapping.mouza, name: searchResult.areaMapping.mouza, i18nKey: searchResult.areaMapping.mouza } : ""));
+const [mouza, setMouza] = useState(formData?.areaMapping?.mouza || searchResult?.areaMapping?.mouza || "");
 
-const [ward, setWard] = useState(searchResult?.areaMapping?.ward || formData?.areaMapping?.ward || "");
+const [ward, setWard] = useState(formData?.areaMapping?.ward || (searchResult?.areaMapping?.ward ? { code: searchResult.areaMapping.ward, name: searchResult.areaMapping.ward, i18nKey: searchResult.areaMapping.ward } : ""));
+
+const [villageName, setVillageName] = useState(formData?.areaMapping?.villageName || (searchResult?.areaMapping?.villageName ? { code: searchResult.areaMapping.villageName, name: searchResult.areaMapping.villageName, i18nKey: searchResult.areaMapping.villageName } : ""));
 
   // Fetch data from MDMS
   const { data: areaMappingData, isLoading } = Digit.Hooks.useEnabledMDMS(
@@ -34,9 +40,11 @@ const [ward, setWard] = useState(searchResult?.areaMapping?.ward || formData?.ar
       { name: "districts" }, 
       { name: "planningAreas" }, 
       { name: "ppAuthorities" }, 
+      { name: "concernedAuthorities" },
       { name: "bpAuthorities" }, 
       { name: "revenueVillages" }, 
-      { name: "mouzas" }
+      { name: "villages" },
+      { name: "ulbWardDetails" }
     ],
     {
       select: (data) => {
@@ -55,6 +63,17 @@ const [ward, setWard] = useState(searchResult?.areaMapping?.ward || formData?.ar
         i18nKey: district.districtCode,
       }));
       setDistricts(formattedDistricts);
+    }
+  }, [areaMappingData]);
+
+  useEffect(() => {
+    if (areaMappingData?.concernedAuthorities) {
+      const formattedConcernedAuthority = areaMappingData.concernedAuthorities.map((concernedAuthority) => ({
+        code: concernedAuthority.authorityType,
+        name: concernedAuthority.authorityType,
+        i18nKey: concernedAuthority.authorityType,
+      }));
+      setConcernedAuthorities(formattedConcernedAuthority);
     }
   }, [areaMappingData]);
 
@@ -90,11 +109,11 @@ const [ward, setWard] = useState(searchResult?.areaMapping?.ward || formData?.ar
     }
   }, [planningArea, areaMappingData]);
 
-  // Update BP authorities when PP authority changes
+  // Update BP authorities based on concerned authority and PP authority
   useEffect(() => {
-    if (ppAuthority && areaMappingData?.bpAuthorities) {
+    if (ppAuthority && concernedAuthority && areaMappingData?.bpAuthorities) {
       const filteredBpAuthorities = areaMappingData.bpAuthorities
-        .filter(authority => authority.ppAuthorityCode === ppAuthority?.code)
+        .filter(authority => authority.ppAuthorityCode === ppAuthority?.code && authority.authorityType === concernedAuthority?.code)
         .map(authority => ({
           code: authority.bpAuthorityCode,
           name: authority.bpAuthorityName,
@@ -104,13 +123,29 @@ const [ward, setWard] = useState(searchResult?.areaMapping?.ward || formData?.ar
     } else {
       setBpAuthorities([]);
     }
-  }, [ppAuthority, areaMappingData]);
+  }, [ppAuthority, concernedAuthority, areaMappingData]);
 
-  // Update revenue villages when BP authority changes
+  // Update wards when BP authority changes (only for ULB)
   useEffect(() => {
-    if (bpAuthority && areaMappingData?.revenueVillages) {
+    if (bpAuthority && concernedAuthority?.code === "ULB" && areaMappingData?.ulbWardDetails) {
+      const filteredWards = areaMappingData.ulbWardDetails
+        .filter(ward => ward.ulbCode === bpAuthority?.code)
+        .map(ward => ({
+          code: ward.wardCode,
+          name: ward.wardName,
+          i18nKey: ward.wardCode,
+        }));
+      setWards(filteredWards);
+    } else {
+      setWards([]);
+    }
+  }, [bpAuthority, concernedAuthority, areaMappingData]);
+
+  // Update revenue villages when ward changes (only for ULB)
+  useEffect(() => {
+    if (ward && concernedAuthority?.code === "ULB" && areaMappingData?.revenueVillages) {
       const filteredRevenueVillages = areaMappingData.revenueVillages
-        .filter(village => village.bpAuthorityCode === bpAuthority?.code)
+        .filter(village => village.wardCode === ward?.code)
         .map(village => ({
           code: village.revenueVillageCode,
           name: village.revenueVillageName,
@@ -120,58 +155,92 @@ const [ward, setWard] = useState(searchResult?.areaMapping?.ward || formData?.ar
     } else {
       setRevenueVillages([]);
     }
-  }, [bpAuthority, areaMappingData]);
+  }, [ward, concernedAuthority, areaMappingData]);
 
-  // Update mouzas when revenue village changes
+  // Update villages when BP authority changes (only for GRAM_PANCHAYAT)
   useEffect(() => {
-    if (revenueVillage && areaMappingData?.mouzas) {
-      const filteredMouzas = areaMappingData.mouzas
-        .filter(mouza => mouza.revenueVillageCode === revenueVillage?.code)
-        .map(mouza => ({
-          code: mouza.mouzaCode,
-          name: mouza.mouzaName,
-          i18nKey: mouza.mouzaCode,
+    if (bpAuthority && concernedAuthority?.code === "GRAM_PANCHAYAT" && areaMappingData?.villages) {
+      const filteredVillages = areaMappingData.villages
+        .filter(village => village.gramPanchayatCode === bpAuthority?.code)
+        .map(village => ({
+          code: village.villageCode,
+          name: village.villageName,
+          i18nKey: village.villageCode,
         }));
-      setMouzas(filteredMouzas);
+      setVillages(filteredVillages);
     } else {
-      setMouzas([]);
+      setVillages([]);
     }
-  }, [revenueVillage, areaMappingData]);
+  }, [bpAuthority, concernedAuthority, areaMappingData]);
 
   // Custom handlers for dropdown changes
   const handleDistrictChange = (selectedDistrict) => {
     setDistrict(selectedDistrict);
     setPlanningArea("");
     setPpAuthority("");
+    setConcernedAuthority("");
     setBpAuthority("");
     setRevenueVillage("");
     setMouza("");
+    setWard("");
+    setVillageName("");
   };
 
   const handlePlanningAreaChange = (selectedPlanningArea) => {
     setPlanningArea(selectedPlanningArea);
     setPpAuthority("");
+    setConcernedAuthority("");
     setBpAuthority("");
     setRevenueVillage("");
     setMouza("");
+    setWard("");
+    setVillageName("");
   };
 
   const handlePpAuthorityChange = (selectedPpAuthority) => {
     setPpAuthority(selectedPpAuthority);
+    setConcernedAuthority("");
     setBpAuthority("");
     setRevenueVillage("");
     setMouza("");
+    setWard("");
+    setVillageName("");
+  };
+
+  const handleConcernedAuthorityChange = (selectedConcernedAuthority) => {
+    setConcernedAuthority(selectedConcernedAuthority);
+    setBpAuthority("");
+    setRevenueVillage("");
+    setMouza("");
+    setWard("");
+    setVillageName("");
   };
 
   const handleBpAuthorityChange = (selectedBpAuthority) => {
     setBpAuthority(selectedBpAuthority);
     setRevenueVillage("");
     setMouza("");
+    setWard("");
+    setVillageName("");
   };
 
-  const handleRevenueVillageChange = (selectedRevenueVillage) => {
-    setRevenueVillage(selectedRevenueVillage);
+  const handleWardChange = (selectedWard) => {
+    setWard(selectedWard);
+    setRevenueVillage("");
     setMouza("");
+  };
+
+  // Validation logic based on concerned authority
+  const getValidationLogic = () => {
+    const baseValidation = !district || !planningArea || !ppAuthority || !concernedAuthority || !bpAuthority;
+    
+    if (concernedAuthority?.code === "ULB") {
+      return baseValidation || !ward || !revenueVillage || !mouza;
+    } else if (concernedAuthority?.code === "GRAM_PANCHAYAT") {
+      return baseValidation || !villageName || !mouza;
+    }
+    
+    return baseValidation;
   };
 
   // Go next
@@ -180,10 +249,11 @@ const [ward, setWard] = useState(searchResult?.areaMapping?.ward || formData?.ar
       district,
       planningArea,
       ppAuthority,
+      concernedAuthority,
       bpAuthority,
-      revenueVillage,
-      mouza,
-      ward
+      ...(concernedAuthority?.code === "ULB" && { ward, revenueVillage }),
+      ...(concernedAuthority?.code === "GRAM_PANCHAYAT" && { villageName }),
+      mouza
     };
 
     onSelect(config.key, { ...formData[config.key], ...areaMappingStep });
@@ -198,15 +268,7 @@ const [ward, setWard] = useState(searchResult?.areaMapping?.ward || formData?.ar
         onSelect={goNext}
         onSkip={onSkip}
         t={t}
-        isDisabled={
-          !district ||
-          !planningArea ||
-          !ppAuthority ||
-          !bpAuthority ||
-          !revenueVillage ||
-          !mouza ||
-          !ward
-        }
+        isDisabled={getValidationLogic()}
       >
         <div>
           {/* District */}
@@ -246,6 +308,18 @@ const [ward, setWard] = useState(searchResult?.areaMapping?.ward || formData?.ar
             placeholder={!planningArea ? t("SELECT_PLANNING_AREA_FIRST") : t("SELECT_PP_AUTHORITY")}
           />
 
+          {/* Concerned Authority */}
+          <CardLabel>{`${t("CONCERNED_AUTHORITY")}`} <span className="check-page-link-button">*</span></CardLabel>
+          <Dropdown
+            t={t}
+            option={concernedAuthorities}
+            optionKey="i18nKey"
+            selected={concernedAuthority}
+            select={handleConcernedAuthorityChange} 
+            optionCardStyles={{ maxHeight: "300px", overflowY: "auto" }}
+            placeholder={t("SELECT_CONCERNED_AUTHORITY")}
+          />
+          
           {/* BP Authority */}
           <CardLabel>{`${t("BP_AUTHORITY")}`} <span className="check-page-link-button">*</span></CardLabel>
           <Dropdown
@@ -255,54 +329,63 @@ const [ward, setWard] = useState(searchResult?.areaMapping?.ward || formData?.ar
             selected={bpAuthority}
             select={handleBpAuthorityChange}
             optionCardStyles={{ maxHeight: "300px", overflowY: "auto" }}
-            placeholder={!ppAuthority ? t("SELECT_PP_AUTHORITY_FIRST") : t("SELECT_BP_AUTHORITY")}
+            placeholder={!concernedAuthority ? t("SELECT_CONCERNED_AUTHORITY_FIRST") : t("SELECT_BP_AUTHORITY")}
           />
 
-          {/* Revenue Village */}
-          <CardLabel>{`${t("REVENUE_VILLAGE")}`} <span className="check-page-link-button">*</span></CardLabel>
-          <Dropdown
-            t={t}
-            option={revenueVillages}
-            optionKey="i18nKey"
-            id="revenueVillage"
-            selected={revenueVillage}
-            select={handleRevenueVillageChange}
-            optionCardStyles={{ maxHeight: "300px", overflowY: "auto" }}
-            placeholder={!bpAuthority ? t("SELECT_BP_AUTHORITY_FIRST") : t("SELECT_REVENUE_VILLAGE")}
-          />
+          {/* Conditional fields based on concerned authority */}
+          {concernedAuthority?.code === "ULB" && (
+            <>
+              {/* Ward */}
+              <CardLabel>{`${t("WARD")}`} <span className="check-page-link-button">*</span></CardLabel>
+              <Dropdown
+                t={t}
+                option={wards}
+                optionKey="i18nKey"
+                selected={ward}
+                select={handleWardChange}
+                optionCardStyles={{ maxHeight: "300px", overflowY: "auto" }}
+                placeholder={!bpAuthority ? t("SELECT_BP_AUTHORITY_FIRST") : t("SELECT_WARD")}
+              />
 
-          {/* Mouza */}
-          <CardLabel>{`${t("MOUZA")}`} <span className="check-page-link-button">*</span></CardLabel>
-          {mouzas.length > 0 ? (
-            <Dropdown
-              t={t}
-              option={mouzas}
-              optionKey="i18nKey"
-              selected={mouza}
-              optionCardStyles={{ maxHeight: "300px", overflowY: "auto" }}
-              select={setMouza}
-              placeholder={!revenueVillage ? t("SELECT_REVENUE_VILLAGE_FIRST") : t("SELECT_MOUZA")} 
-            />
-          ) : (
-            <TextInput
-              t={t}
-              name="mouza"
-              value={mouza}
-              onChange={(e) => setMouza(e.target.value)}
-              placeholder={`${t("ENTER_MOUZA_NAME")}`}
-            />
+              {/* Revenue Village */}
+              <CardLabel>{`${t("REVENUE_VILLAGE")}`} <span className="check-page-link-button">*</span></CardLabel>
+              <Dropdown
+                t={t}
+                option={revenueVillages}
+                optionKey="i18nKey"
+                id="revenueVillage"
+                selected={revenueVillage}
+                select={setRevenueVillage}
+                optionCardStyles={{ maxHeight: "300px", overflowY: "auto" }}
+                placeholder={!ward ? t("SELECT_WARD_FIRST") : t("SELECT_REVENUE_VILLAGE")}
+              />
+            </>
           )}
 
-          {/* Ward */}
-          <CardLabel>{`${t("WARD")}`} <span className="check-page-link-button">*</span></CardLabel>
+          {concernedAuthority?.code === "GRAM_PANCHAYAT" && (
+            <>
+              {/* Village Name */}
+              <CardLabel>{`${t("VILLAGE_NAME")}`} <span className="check-page-link-button">*</span></CardLabel>
+              <Dropdown
+                t={t}
+                option={villages}
+                optionKey="i18nKey"
+                selected={villageName}
+                select={setVillageName}
+                optionCardStyles={{ maxHeight: "300px", overflowY: "auto" }}
+                placeholder={!bpAuthority ? t("SELECT_BP_AUTHORITY_FIRST") : t("SELECT_VILLAGE")}
+              />
+            </>
+          )}
+
+          {/* Mouza - Always text input */}
+          <CardLabel>{`${t("MOUZA")}`} <span className="check-page-link-button">*</span></CardLabel>
           <TextInput
             t={t}
-            name="ward"
-            value={ward}
-            maxLength={3}
-            minLength={1}
-            onChange={(e) => setWard(e.target.value.replace(/[^0-9]/g, ""))}
-            placeholder={`${t("ENTER_WARD_NUMBER")}`}
+            name="mouza"
+            value={mouza}
+            onChange={(e) => setMouza(e.target.value)}
+            placeholder={`${t("ENTER_MOUZA_NAME")}`}
           />
         </div>
       </FormStep>
