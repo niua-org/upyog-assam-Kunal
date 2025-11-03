@@ -205,7 +205,7 @@ public class BPAService {
 	private void addCalculation(BPARequest bpaRequest) {
 
 		BPA bpa = bpaRequest.getBPA();
-		bpa.setTenantId("pg");
+		bpa.setTenantId(bpa.getTenantId());
 		bpa.setApplicationType("RESIDENTIAL_RCC");
 		List<Floor> floors = new ArrayList<>();
 		floors.add(new Floor(0, bpa.getLandInfo().getTotalPlotArea(), BigDecimal.ZERO));
