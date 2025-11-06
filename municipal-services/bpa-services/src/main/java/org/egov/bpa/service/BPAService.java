@@ -152,7 +152,8 @@ public class BPAService {
 
         wfIntegrator.callWorkFlow(bpaRequest);
 
-        //nocService.createNocRequest(bpaRequest, mdmsData);
+        mdmsData = util.mDMSCall(requestInfo, tenantId);
+        nocService.createNocRequest(bpaRequest, mdmsData);
 
      //   this.addCalculation(applicationType, bpaRequest);
 
