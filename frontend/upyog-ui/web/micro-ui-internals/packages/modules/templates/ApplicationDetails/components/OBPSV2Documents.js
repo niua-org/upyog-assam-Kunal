@@ -29,30 +29,23 @@ const OBPSV2Documents = ({ t, formData, applicationData, docs, obpsActionsDetail
     let filtredBpaDocs = bpaDocs?.BPA?.DocMapping;
     useEffect(() => {  
     let documentsList = [];
-    filtredBpaDocs?.[0]?.docTypes?.forEach(doc => {
-        let code = doc.code; doc.dropdownData = []; doc.uploadedDocuments = [];
-        commonDocs?.["common-masters"]?.DocumentType?.forEach(value => {
-            let values = value.code.slice(0, code.length);
-            if (code === values) {
-                doc.hasDropdown = true;
-                value.i18nKey = value.code;
-                doc.dropdownData.push(value);
-            }
-        });
-        
-        doc.uploadedDocuments[0] = {};
-        doc.uploadedDocuments[0].values = [];
-        docs?.[0]?.values?.map(upDocs => {
-          if (code === `${upDocs?.documentType?.split('.')[0]}.${upDocs?.documentType?.split('.')[1]}`) {
-              doc.uploadedDocuments[0].values.push(upDocs)
-          }
-      })
-      
-        documentsList.push(doc);
+    
+    // Only process documents that actually exist in docs
+    docs?.[0]?.values?.forEach(upDoc => {
+        const docType = upDoc?.documentType;
+        if (docType) {
+            const doc = {
+                code: docType,
+                uploadedDocuments: [{
+                    values: [upDoc]
+                }]
+            };
+            documentsList.push(doc);
+        }
     });
-    sessionStorage.setItem("OBPS_DOCUMENTS", JSON.stringify(documentsList));
-        setBpaTaxDocuments(documentsList);
-      }, [!bpaDocsLoading, !commonDocsLoading]);
+    
+    setBpaTaxDocuments(documentsList);
+      }, [docs]);
 
   useEffect(() => {
     let count = 0;
@@ -73,7 +66,7 @@ const OBPSV2Documents = ({ t, formData, applicationData, docs, obpsActionsDetail
  //s if (isLoading) return <Loader />;
 
   return (
-    <div>
+    <div style={{display: "flex", flexWrap: "wrap", gap: "16px"}}>
         {bpaTaxDocuments?.map((document, index) => {
             return (
                 <div>
@@ -182,70 +175,13 @@ function SelectDocument({
   };
 
   return (
-    <div
-      style={{
-        marginBottom: "24px",
-        maxWidth: "950px",
-        minWidth: "280px",
-        background: "#FAFAFA",
-        borderRadius: "4px",
-        border: "1px solid #D6D5D4",
-        padding: "8px",
-      }}
-    >
-      <CardSubHeader
-        style={{
-          marginBottom: "8px",
-          paddingBottom: "9px",
-          color: "#0B0C0C",
-          fontSize: "16px",
-          lineHeight: "19px",
-        }}
-      >
-        {`${t(doc?.code)}`}
-      </CardSubHeader>
-
+    <div style={{ marginRight: "16px" }}>
       {doc?.uploadedDocuments?.length && (
         <DocumentsPreview
           documents={doc?.uploadedDocuments}
-          svgStyles={{ width: "100px", height: "100px", viewBox: "0 0 25 25", minWidth: "100px" }}
+          svgStyles={{ width: "24px", height: "24px" }}
         />
       )}
-
-      {checkEnablingDocs ? (
-        <div style={{ marginTop: "20px" }}>
-          <LabelFieldPair style={{ width: "100%" }}>
-            <CardLabel style={{ marginTop: "-10px", width: "100%" }}>
-              {doc?.required ? `${t(doc?.code)}* ` : `${t(doc?.code)}`}
-            </CardLabel>
-            <Dropdown
-              className="form-field"
-              t={t}
-              isMandatory={false}
-              option={doc?.dropdownData}
-              selected={selectedDocument}
-              optionKey="i18nKey"
-              select={handleSelectDocument}
-              style={{ width: "100%" }}
-            />
-          </LabelFieldPair>
-
-          <LabelFieldPair style={{ width: "100%" }}>
-            <CardLabel className="card-label-smaller" style={{ width: "100%" }}></CardLabel>
-            <div className="field" style={{ width: "100%" }}>
-              <MultiUploadWrapper
-                module="BPA"
-                tenantId={tenantId}
-                getFormState={(e) => getData(index, e)}
-                t={t}
-                allowedFileTypesRegex={allowedFileTypes}
-                allowedMaxSizeInMB={5}
-                acceptFiles="image/*, .pdf, .png, .jpeg, .jpg"
-              />
-            </div>
-          </LabelFieldPair>
-        </div>
-      ) : null}
     </div>
   );
 }

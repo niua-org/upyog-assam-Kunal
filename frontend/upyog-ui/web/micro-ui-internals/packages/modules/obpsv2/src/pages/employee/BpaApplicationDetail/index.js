@@ -59,7 +59,7 @@ const BPAEmployeeDetails = () => {
            response = await Digit.PaymentService.generatePdf(tenantId, { Payments: data?.collectionBillDetails}, "bpa-receipt");
         }
         const fileStore = await Digit.PaymentService.printReciept(tenantId, { fileStoreIds: response });
-        window.open(fileStore[response?.filestoreIds[0]], "_blank");      
+        window.open(fileStore[response], "_blank");      
       },
     });
   }
@@ -114,6 +114,8 @@ const BPAEmployeeDetails = () => {
               onHeadClick={() => setShowOptions(!showOptions)}
               displayOptions={showOptions}
               options={downloadOptions}
+              downloadBtnClassName={"employee-download-btn-className"}
+              optionsClassName={"employee-options-btn-className"}
             />
           )}
           </div>

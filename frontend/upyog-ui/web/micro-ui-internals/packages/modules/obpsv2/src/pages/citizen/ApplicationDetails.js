@@ -119,10 +119,17 @@ import {
     //const SiteReport = Digit.ComponentRegistryService.getComponent("siteReport")
     const mutation = Digit.Hooks.obpsv2.useBPACreateUpdateApi(tenantId, "update");
   
+    const getBusinessService = () => {
+      if (bpa_details?.status === "CITIZEN_FINAL_PAYMENT") {
+        return "BPA.BUILDING_PERMIT_FEE";
+      }
+      return "BPA.PLANNING_PERMIT_FEE";
+    };
+    
     const { data: reciept_data, isLoading: recieptDataLoading } = Digit.Hooks.useRecieptSearch(
       {
         tenantId: tenantId,
-        businessService: "BPA.PLANNING_PERMIT_FEE",
+        businessService: getBusinessService(),
         consumerCodes: acknowledgementIds,
         isEmployee: false,
       },
@@ -353,7 +360,8 @@ import {
         setDisplayMenu(false);
         break;
       case "PAY":
-        let redirectURL = `${window.location.origin}/upyog-ui/citizen/payment/my-bills/BPA.PLANNING_PERMIT_FEE/${bpaId}`;
+        const businessService = getBusinessService();
+        let redirectURL = `${window.location.origin}/upyog-ui/citizen/payment/my-bills/${businessService}/${bpaId}`;
         redirectToPage(redirectURL);
         break;
       default:
@@ -830,6 +838,31 @@ import {
                   }}
                 />
               </div>
+            )}
+            {bpa_details?.documents && bpa_details.documents.length > 0 && (
+              <>
+                <CardSubHeader style={{ fontSize: "24px" }}>{t("BPA_DOCUMENT_DETAILS_LABEL")}</CardSubHeader>
+              <div style={{ marginTop: "16px" }}>
+                <DocumentsPreview
+                  documents={[{
+                    values: bpa_details.documents.map(doc => ({
+                      title: doc.documentType,
+                      url: `/filestore/v1/files/id?tenantId=${Digit.ULBService.getCurrentTenantId()}&fileStoreId=${doc.fileStoreId}`,
+                      documentType: doc.documentType
+                    }))
+                  }]}
+                  svgStyles={{}}
+                  isSendBackFlow={false}
+                  isHrLine={true}
+                  titleStyles={{
+                    fontSize: "16px",
+                    lineHeight: "20px",
+                    fontWeight: 600,
+                    marginBottom: "8px",
+                  }}
+                />
+              </div>
+              </>
             )}
           {(form22 && form23A) ? (
             <div>

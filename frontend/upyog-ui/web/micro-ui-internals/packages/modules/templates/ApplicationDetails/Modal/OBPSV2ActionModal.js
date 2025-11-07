@@ -167,6 +167,9 @@ const ActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction,
     if (action) {
       if (action.action === "PAY") {
         let servicePath = "BPA.PLANNING_PERMIT_FEE";
+        if (applicationData?.status === "CITIZEN_FINAL_PAYMENT") {
+          servicePath = "BPA.BUILDING_PERMIT_FEE";
+        }
         console.log(servicePath);
         return history.push(`/upyog-ui/employee/payment/collect/${servicePath}/${applicationData.applicationNo}`);
       }

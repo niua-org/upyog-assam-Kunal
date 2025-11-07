@@ -3,7 +3,7 @@ import { Card, Modal, TextArea, UploadFile, Heading, CloseBtn, CardLabel, CardLa
 import { OBPSV2Services } from "../../../../libraries/src/services/elements/OBPSV2";
 import { useTranslation } from "react-i18next";
 ///TODO: Remove unwanted multiple search calls, instead use once and cache the response in a state of useRef 
-const Action = ({ selectedAction, applicationNo, closeModal, setSelectedAction, setToastMessage, setShowToast: parentSetShowToast, refetch}) => {
+const Action = ({ selectedAction, applicationNo, closeModal, setSelectedAction, setToastMessage, setShowToast: parentSetShowToast, refetch,bpaStatus}) => {
   const { t } = useTranslation();
   const [comments, setComments] = useState("");
   const [uploadedFile, setUploadedFile] = useState(null);
@@ -120,9 +120,15 @@ const Action = ({ selectedAction, applicationNo, closeModal, setSelectedAction, 
           break;
         case "PAY":
           const isEmployeeRoute = window.location.href.includes("/employee/");
+          let businessService = "BPA.PLANNING_PERMIT_FEE";
+          
+          if (bpaStatus === "CITIZEN_FINAL_PAYMENT") {
+            businessService = "BPA.BUILDING_PERMIT_FEE";
+          }
+          
           let redirectURL = isEmployeeRoute 
-            ? `${window.location.origin}/upyog-ui/employee/payment/collect/BPA.PLANNING_PERMIT_FEE/${applicationNo}`
-            : `${window.location.origin}/upyog-ui/citizen/payment/my-bills/BPA.PLANNING_PERMIT_FEE/${applicationNo}`;
+            ? `${window.location.origin}/upyog-ui/employee/payment/collect/${businessService}/${applicationNo}`
+            : `${window.location.origin}/upyog-ui/citizen/payment/my-bills/${businessService}/${applicationNo}`;
           redirectToPage(redirectURL);
           break;
         case "APPLY_FOR_SCRUTINY":

@@ -154,14 +154,6 @@ export const bpaPayload = async(data) => {
         rtpUUID: data?.land?.registeredTechnicalPerson?.code,
       },
 
-      documents:
-        data?.land?.documents?.map((doc) => ({
-          documentType: doc?.documentType || "",
-          documentUid: doc?.documentUid || "",
-          fileStoreId: doc?.fileStoreId || "",
-          id: doc?.id || "",
-        })) || [],
-
       landInfo: {
         tenantId: data?.tenantId,
         newDagNumber: data?.land?.newDagNumber,
@@ -299,8 +291,13 @@ export const bpaEditPayload = async (formData) => {
       ...formData.additionalDetails
     };
   }
-  if (formData?.documents?.length) {
-    updated.documents = formData?.documents?.documents
+
+  if (formData?.documents?.documents && Array.isArray(formData.documents.documents) && formData.documents.documents.length > 0) {
+    updated.documents = formData.documents.documents.map(doc => ({
+      documentType: doc.documentType,
+      documentUid: doc.documentUid,
+      fileStoreId: doc.fileStoreId
+    }))
   }
   updated.status = "EDIT_APPLICATION";
   updated.workflow = {

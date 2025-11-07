@@ -162,7 +162,7 @@ export const useApplicationsForBusinessServiceSearch = ({ tenantId, businessServ
   if (window.location.href.includes("pet-services")) {
     _key = "ptr"
   }
-  if (window.location.href.includes("BPA.PLANNING_PERMIT_FEE")) {
+  if (window.location.href.includes("BPA.")) {
     _key = "bpa"
   } 
   if (window.location.href.includes("sv-services")) {

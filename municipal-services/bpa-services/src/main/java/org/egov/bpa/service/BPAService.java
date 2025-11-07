@@ -152,8 +152,6 @@ public class BPAService {
 
         wfIntegrator.callWorkFlow(bpaRequest);
 
-        //nocService.createNocRequest(bpaRequest, mdmsData);
-
      //   this.addCalculation(applicationType, bpaRequest);
 
         log.info("bpaRequest before create : " + String.valueOf(bpaRequest.getBPA().getApplicationNo()) + "---"
@@ -510,6 +508,11 @@ public class BPAService {
 			landService.updateLandInfo(bpaRequest);
 			break;
 
+		case "SUBMIT_REPORT":
+			Object mdmsData = util.mDMSCall(requestInfo, tenantId);
+	        nocService.createNocRequest(bpaRequest, mdmsData);
+			break;
+
 		default:
 			enrichmentService.enrichBPAUpdateRequest(bpaRequest, businessService);
 			wfIntegrator.callWorkFlow(bpaRequest);
@@ -517,10 +520,10 @@ public class BPAService {
 			break;
 		}
 
-		if("PENDING_CHAIRMAN_PRESIDENT_MB".equalsIgnoreCase(bpaRequest.getBPA().getStatus())) {
-			addCalculation(bpaRequest, "BUILDING_PERMIT_FEE");			
-		}
-
+        if ("PENDING_CHAIRMAN_PRESIDENT_MB".equalsIgnoreCase(bpaRequest.getBPA().getStatus())
+                || "PENDING_CHAIRMAN_PRESIDENT_GP".equalsIgnoreCase(bpaRequest.getBPA().getStatus())) {
+            addCalculation(bpaRequest, "BUILDING_PERMIT_FEE");
+        }
 		return bpaRequest.getBPA();
 
       //  Map<String, String> additionalDetails = bpa.getAdditionalDetails() != null ? (Map<String, String>) bpa.getAdditionalDetails()
