@@ -178,17 +178,27 @@ export const SuccessfulPayment = (props) => {
       currentDate.getFullYear() + "-" + (currentDate.getMonth() + 1) + "-" + currentDate.getDate()
     );
     let reqData = { ...bpaData, edcrDetail: [{ ...edcrData }] };
-    let response = await Digit.PaymentService.generatePdf(bpaData?.tenantId, { Bpa: [reqData] }, order);
-    const fileStore = await Digit.PaymentService.printReciept(bpaData?.tenantId, { fileStoreIds: response.filestoreIds[0] });
+    let response = await Digit.PaymentService.generatePdf(tenantId, { Bpa: [reqData] }, order);
+    const fileStore = await Digit.PaymentService.printReciept(tenantId, { fileStoreIds: response.filestoreIds[0] });
     window.open(fileStore[response?.filestoreIds[0]], "_blank");
     reqData["applicationType"] = data?.[0]?.additionalDetails?.applicationType;
-    let edcrResponseData = await Digit.OBPSService.edcr_report_download({ BPA: { ...reqData } });
-    const responseStatus = parseInt(edcrResponseData.status, 10);
-    if (responseStatus === 201 || responseStatus === 200) {
-      mode == "print"
-        ? printPdf(new Blob([edcrResponseData.data], { type: "application/pdf" }))
-        : downloadPdf(new Blob([edcrResponseData.data], { type: "application/pdf" }), `edcrReport.pdf`);
-    }
+  };
+  const getBuildingPermitOrder = async (order, mode = "download") => {
+    let applicationNo =  data?.[0]?.applicationNo ;
+    let bpaResponse = await Digit.OBPSV2Services.search({tenantId,
+      filters: { applicationNo }});
+    const edcrResponse = await Digit.OBPSService.scrutinyDetails("assam", { edcrNumber: data?.[0]?.edcrNumber });
+    let bpaData = bpaResponse?.bpa?.[0];
+    let edcrData = edcrResponse?.edcrDetail?.[0];
+    let currentDate = new Date();
+    bpaData.additionalDetails.runDate = convertDateToEpoch(
+      currentDate.getFullYear() + "-" + (currentDate.getMonth() + 1) + "-" + currentDate.getDate()
+    );
+    let reqData = { ...bpaData, edcrDetail: [{ ...edcrData }] };
+    let response = await Digit.PaymentService.generatePdf(tenantId, { Bpa: [reqData] }, order);
+    const fileStore = await Digit.PaymentService.printReciept(tenantId, { fileStoreIds: response.filestoreIds[0] });
+    window.open(fileStore[response?.filestoreIds[0]], "_blank");
+    reqData["applicationType"] = data?.[0]?.additionalDetails?.applicationType;
   };
 
   const printReciept = async () => {
@@ -260,7 +270,7 @@ export const SuccessfulPayment = (props) => {
         }
       
     }
-    const fileStore = await Digit.PaymentService.printReciept(state, { fileStoreIds: response.filestoreIds[0] });
+    const fileStore = await Digit.PaymentService.printReciept(tenantId, { fileStoreIds: response.filestoreIds[0] });
     window.open(fileStore[response.filestoreIds[0]], "_blank");
   };
 
@@ -693,6 +703,16 @@ export const SuccessfulPayment = (props) => {
               >
                 <DownloadPrefixIcon />
                 {t("BPA_PLANNING_PERMIT_ORDER")}
+              </div>
+            ) : null}
+            {(businessService =="BPA.BUILDING_PERMIT_FEE") ? (
+              <div
+                className="primary-label-btn d-grid"
+                style={{ marginLeft: "unset" }}
+                onClick={(r) => getBuildingPermitOrder("bpaBuildingPermit")}
+              >
+                <DownloadPrefixIcon />
+                {t("BPA_BUILDING_PERMIT_ORDER")}
               </div>
             ) : null}
             {businessService == "TL" ? (

@@ -46,6 +46,23 @@ const BPAEmployeeDetails = () => {
     window.open(fileStore[response?.filestoreIds[0]], "_blank");
     //reqData["applicationType"] = data?.[0]?.additionalDetails?.applicationType;
   };
+  const getBuildingPermitOrder = async (order, mode = "download") => {
+    let applicationNo=  data?.applicationData?.applicationNo ;
+    let bpaResponse = await Digit.OBPSV2Services.search({tenantId,
+      filters: { applicationNo }});
+     const edcrResponse = await Digit.OBPSService.scrutinyDetails("assam", { edcrNumber: data?.applicationData?.edcrNumber });
+    let bpaData = bpaResponse?.bpa?.[0];
+      let  edcrData = edcrResponse?.edcrDetail?.[0];
+    let currentDate = new Date();
+    bpaData.additionalDetails.runDate = convertDateToEpoch(
+      currentDate.getFullYear() + "-" + (currentDate.getMonth() + 1) + "-" + currentDate.getDate()
+    );
+    let reqData = { ...bpaData, edcrDetail: [{ ...edcrData }] };
+    let response = await Digit.PaymentService.generatePdf(bpaData?.tenantId, { Bpa: [reqData] }, order);
+    const fileStore = await Digit.PaymentService.printReciept(bpaData?.tenantId, { fileStoreIds: response.filestoreIds[0] });
+    window.open(fileStore[response?.filestoreIds[0]], "_blank");
+    //reqData["applicationType"] = data?.[0]?.additionalDetails?.applicationType;
+  };
   let downloadOptions = [];
   if (data?.collectionBillDetails?.[0]) {
     downloadOptions.push({
@@ -58,8 +75,24 @@ const BPAEmployeeDetails = () => {
         else{
            response = await Digit.PaymentService.generatePdf(tenantId, { Payments: data?.collectionBillDetails}, "bpa-receipt");
         }
-        const fileStore = await Digit.PaymentService.printReciept(tenantId, { fileStoreIds: response });
-        window.open(fileStore[response], "_blank");      
+        const fileStore = await Digit.PaymentService.printReciept(tenantId, { fileStoreIds: response?.filestoreIds?.[0] ||response });
+        window.open(fileStore[response?.filestoreIds?.[0]] || fileStore[response], "_blank");
+      },
+    });
+  }
+  if (data?.collectionBillDetails?.[1]) {
+    downloadOptions.push({
+      label: t("BPA_BUILDING_FEE_RECEIPT"),
+      onClick: async () => {
+        let response = null
+        if(data?.collectionBillDetails?.[1]?.fileStoreId){
+          response = data?.collectionBillDetails?.[1]?.fileStoreId          
+        }
+        else{
+           response = await Digit.PaymentService.generatePdf(tenantId, { Payments: data?.collectionBillDetails}, "bpa-receipt");
+        }
+        const fileStore = await Digit.PaymentService.printReciept(tenantId, { fileStoreIds: response?.filestoreIds?.[0] ||response });
+        window.open(fileStore[response?.filestoreIds?.[0]] || fileStore[response], "_blank");
       },
     });
   }
@@ -68,6 +101,13 @@ const BPAEmployeeDetails = () => {
       order: 3,
       label: t("BPA_PERMIT_ORDER"),
       onClick: () => getPermitOccupancyOrderSearch("planningPermit"),
+    });
+  }
+  if(data?.collectionBillDetails?.length > 1){
+    downloadOptions.push({
+      order: 4,
+      label: t("BPA_BUILDING_PERMIT_ORDER"),
+      onClick: () => getBuildingPermitOrder("bpaBuildingPermit"),
     });
   }
   function checkHead(head) {
@@ -115,7 +155,7 @@ const BPAEmployeeDetails = () => {
               displayOptions={showOptions}
               options={downloadOptions}
               downloadBtnClassName={"employee-download-btn-className"}
-              optionsClassName={"employee-options-btn-className"}
+              //optionsClassName={"employee-options-btn-className"}
             />
           )}
           </div>
