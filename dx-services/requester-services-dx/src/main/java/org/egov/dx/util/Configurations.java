@@ -182,4 +182,7 @@ public class Configurations {
 	@Value("${epramaan.certificate.value}")
 	private String epCertificateValue;
 
+	@Value("${state.level.tenant.id}")
+	private String stateLevelTenantId;
+
 }

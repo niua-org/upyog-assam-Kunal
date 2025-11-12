@@ -93,81 +93,48 @@ public class EPramaanRequestService {
 
     public AuthResponse getRedirectionURL(String module) throws Exception
     {
-       /* // 1. Generate and save PKCE parameters (save these in DB/session)
-        State stateID = new State(UUID.randomUUID().toString());
-        Nonce nonce = new Nonce();
-        CodeVerifier codeVerifier = new CodeVerifier();
 
-        // TODO: Save these to database/session for later verification
-        // saveToDatabase(stateID, nonce, codeVerifier);
+        String authGrantRequestUri = configurations.getEpAuthGrantRequestUri();
+        String clientId = configurations.getEpClientId();
+        String redirectUri = configurations.getEpRedirectUri();
+        String scopeConfig = configurations.getEpScope();
+        String responseTypeConfig = configurations.getEpResponseType();
+        String codeChallengeMethodConfig = configurations.getEpCodeChallengeMethod();
 
-        // 2. Generate code challenge from verifier
-        CodeChallenge codeChallenge = CodeChallenge.compute(CodeChallengeMethod.S256, codeVerifier);
+        validateConfig("epramaan.authGrantRequestUri", authGrantRequestUri);
+        validateConfig("epramaan.clientId", clientId);
+        validateConfig("epramaan.redirectUri", redirectUri);
+        validateConfig("epramaan.scope", scopeConfig);
+        validateConfig("epramaan.responseType", responseTypeConfig);
+        validateConfig("epramaan.codeChallengeMethod", codeChallengeMethodConfig);
 
-      //  String encodedRedirectUri = URLEncoder.encode(REDIRECT_URI, StandardCharsets.UTF_8);
-
-        // 3. Build parameters using Spring's MultiValueMap
-        Map<String, String> params = new LinkedHashMap<>();
-
-        // Basic OIDC parameters
-        params.put("response_type", "code"); // or configurations.getResponseType()
-        params.put("client_id", CLIENT_ID);
-        params.put("redirect_uri", REDIRECT_URI);
-        params.put("scope", "openid"); // Add other scopes if needed
-        params.put("state", stateID.getValue());
-        params.put("nonce", nonce.getValue());
-
-        // PKCE parameters
-        params.put("code_challenge", codeChallenge.getValue());
-        params.put("code_challenge_method", "S256");
-
-        // 4. Calculate apiHmac for ePramaan
-        String inputValue = CLIENT_ID + AES_KEY + stateID.getValue() +
-                nonce.getValue() + REDIRECT_URI + "openid" +
-                codeChallenge.getValue();
-        String apiHmac = hashHMACHex(inputValue, AES_KEY);
-        params.put("apiHmac", apiHmac);
-
-
-        String authorizationUrl = buildAuthorizationUrl(
-                AUTH_GRANT_REQUEST_URI,
-                params
-        );
-
-
-        // 5. Build final URI
-      //  UriComponents uriComponents = UriComponentsBuilder
-        //        .fromHttpUrl(AUTH_GRANT_REQUEST_URI)
-          //      .queryParams(params)
-            //    .build();
-
-        UriComponents uriComponents = UriComponentsBuilder
-                .fromHttpUrl(authorizationUrl)
-                .build();
-
-        return uriComponents.toUri();*/
+        log.info("Preparing ePramaan authorization request. authGrantRequestUri={}, clientIdHash={}, redirectUri={}, scope={}, responseType={}, codeChallengeMethod={}",
+                authGrantRequestUri, hashValue(clientId), redirectUri, scopeConfig, responseTypeConfig, codeChallengeMethodConfig);
 
         //1. save codeVerifier, stateID, nonce in db
         State stateID = new State(UUID.randomUUID().toString());
         Nonce nonce = new Nonce();
         CodeVerifier codeVerifier = new CodeVerifier();
 
+        log.debug("Generated PKCE parameters. state={}, nonce={}, codeVerifier={}", stateID.getValue(), nonce.getValue(), codeVerifier.getValue());
+
         Scope scope = new Scope();
         scope.add(OIDCScopeValue.OPENID);
 
         AuthenticationRequest authenticationRequest =
-                new AuthenticationRequest.Builder(URI.create(configurations.getEpAuthGrantRequestUri()), new ClientID(configurations.getEpClientId()))
+                new AuthenticationRequest.Builder(URI.create(authGrantRequestUri), new ClientID(clientId))
                         .scope(scope)
                         .state(stateID)
-                        .redirectionURI(URI.create(configurations.getEpRedirectUri()))
-                        .endpointURI(URI.create(configurations.getEpAuthGrantRequestUri()))
-                        .codeChallenge(codeVerifier, CodeChallengeMethod.S256)
+                        .redirectionURI(URI.create(redirectUri))
+                        .endpointURI(URI.create(authGrantRequestUri))
+                        .codeChallenge(codeVerifier, CodeChallengeMethod.parse(codeChallengeMethodConfig))
                         .nonce(nonce)
-                        .responseType(new ResponseType(configurations.getEpResponseType())).build();
+                        .responseType(new ResponseType(responseTypeConfig)).build();
 
-        String inputValue = configurations.getEpClientId() + configurations.getEpAesKey() + stateID + nonce + configurations.getEpRedirectUri()
-                + configurations.getEpScope() + authenticationRequest.getCodeChallenge();
+        String inputValue = clientId + configurations.getEpAesKey() + stateID + nonce + redirectUri
+                + scopeConfig + authenticationRequest.getCodeChallenge();
         String apiHmac = hashHMACHex(inputValue, configurations.getEpAesKey());
+        log.debug("Computed apiHmac for state {}: {}", stateID.getValue(), mask(apiHmac));
         String finalUrl = authenticationRequest.toURI().toString() + "&apiHmac=" + apiHmac;
         //return finalUrl;
         UriComponents uriComponents = UriComponentsBuilder
@@ -185,6 +152,8 @@ public class EPramaanRequestService {
                 .epramaanData(ePramaanData).build();
 
         stateCodeMap.put(stateID.getValue(), ePramaanData);
+        log.info("Generated ePramaan redirect URL for state={} and module={}", stateID.getValue(), module);
+        log.debug("ePramaan redirect URL: {}", authResponse.getRedirectURL());
 
         return authResponse;
     }
@@ -237,6 +206,28 @@ public class EPramaanRequestService {
     }
 
 
+
+    private void validateConfig(String propertyName, String value) {
+        if (value == null || value.trim().isEmpty()) {
+            log.error("Missing or empty configuration value for {}", propertyName);
+            throw new IllegalArgumentException("Configuration property " + propertyName + " must not be null or empty");
+        }
+    }
+
+    private String hashValue(String value) {
+        if (value == null) {
+            return "null";
+        }
+        return Integer.toHexString(value.hashCode());
+    }
+
+    private String mask(String value) {
+        if (value == null) {
+            return "null";
+        }
+        int visibleChars = Math.min(4, value.length());
+        return value.substring(0, visibleChars) + "****";
+    }
 
     private static String hashHMACHex(String inputValue, String hMACKey) throws Exception {
         Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
@@ -464,9 +455,7 @@ public class EPramaanRequestService {
         
         // Also set digilockerid for backward compatibility
         user.setDigilockerid(tokenRes.getEpramaanId());
-        
-        //TODO: remove hard coded tenant id
-        user.setTenantId("pg");
+        user.setTenantId(configurations.getStateLevelTenantId());
         user.setAccess_token(tokenRes.getSessionId());
         //user.setDob(tokenRes.getDob());
 
