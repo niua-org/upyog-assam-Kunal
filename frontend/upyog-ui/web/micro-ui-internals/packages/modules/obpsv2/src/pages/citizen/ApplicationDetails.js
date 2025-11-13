@@ -63,7 +63,9 @@ import {
     const [hasAccess, setHasAccess] = useState(false);
     const { roles } = Digit.UserService.getUser().info;
     const [workflowDetails, setWorkflowDetails] = useState(null);
-
+    const [collectionBillArray, setCollectionBillArray] = useState([]);
+    const [collectionBillDetails, setCollectionBillDetails] = useState([]);
+    const [totalAmount, setTotalAmount] = useState(0);
     const { data: mdmsData } = Digit.Hooks.useEnabledMDMS("as", "BPA", [{ name: "PermissibleZone" }], {
     select: (data) => {
       return data?.BPA?.PermissibleZone || {};
@@ -126,7 +128,7 @@ import {
     const mutation = Digit.Hooks.obpsv2.useBPACreateUpdateApi(tenantId, "update");
   
     const getBusinessService = () => {
-      if (bpa_details?.status === "CITIZEN_FINAL_PAYMENT") {
+      if (bpa_details?.status === "APPLICATION_COMPLETED") {
         return "BPA.BUILDING_PERMIT_FEE";
       }
       return "BPA.PLANNING_PERMIT_FEE";
@@ -357,13 +359,124 @@ import {
       window.open(fileStore[response?.filestoreIds?.[0]] || fileStore[response], "_blank");
 
     };
+    const getBuildingPermitOrder = async (order, mode = "download") => {
+      let applicationNo =  data?.bpa?.[0]?.applicationNo ;
+      let bpaResponse = await Digit.OBPSV2Services.search({tenantId,
+        filters: { applicationNo}});
+       const edcrResponse = await Digit.OBPSService.scrutinyDetails("assam", { edcrNumber: data?.bpa?.[0]?.edcrNumber });
+      let bpaData = bpaResponse?.bpa?.[0];
+        let edcrData = edcrResponse?.edcrDetail?.[0];
+    
+      let reqData = { ...bpaData, edcrDetail: [{ ...edcrData }] };
+      let response = await Digit.PaymentService.generatePdf(tenantId, { Bpa: [reqData] }, "bpaBuildingPermit");
+      const fileStore = await Digit.PaymentService.printReciept(tenantId, { fileStoreIds: response?.filestoreIds?.[0] ||response });
+      window.open(fileStore[response?.filestoreIds?.[0]] || fileStore[response], "_blank");
+
+    };
+    useEffect(() => {
+      const collectionDetails = async () => {
+        try {
+          let appBusinessService = ["BPA.PLANNING_PERMIT_FEE", "BPA.BUILDING_PERMIT_FEE"];
+          let collectionBillRes = [];
+          let collectionArray = [];
+          let collectionDetailsArray = [];
+          let total = 0;
+          if (appBusinessService?.[1]) {
+            const fetchBillRes = await Digit.PaymentService.fetchBill(data?.bpa?.[0]?.tenantId, {
+              consumerCode: data?.bpa?.[0]?.applicationNo,
+              businessService: appBusinessService[1],
+            });
+          }
   
+          for (let i = 0; i < appBusinessService?.length; i++) {
+            const collectionres = await Digit.PaymentService.recieptSearch(
+              data?.bpa?.[0]?.tenantId,
+              appBusinessService[i],
+              { consumerCodes: data?.bpa?.[0]?.applicationNo, isEmployee: true }
+            );
+  
+            if (collectionres?.Payments?.length > 0) {
+              collectionres?.Payments?.forEach(res => {
+                res?.paymentDetails?.forEach(resData => {
+                  if (resData?.businessService === appBusinessService[i]) {
+                    collectionBillRes.push(res);
+                  }
+                });
+              });
+              collectionDetailsArray.push(...collectionres?.Payments);
+            }
+          }
+  
+          if (collectionBillRes?.length > 0) {
+            collectionBillRes?.forEach(ob => {
+              ob?.paymentDetails?.[0]?.bill?.billDetails?.[0]?.billAccountDetails.forEach(bill => {
+                collectionArray.push(
+                  { title: `${bill?.taxHeadCode}_DETAILS`, value: "", isSubTitle: true },
+                  { title: bill?.taxHeadCode, value: `₹${bill?.amount}` },
+                  { title: "BPA_STATUS_LABEL", value: "Paid" }
+                );
+                total += parseInt(bill?.amount || 0);
+              });
+            });
+          }
+          setCollectionBillArray(collectionArray);
+          setCollectionBillDetails(collectionDetailsArray);
+          setTotalAmount(total);
+          //console.log("collectiondet", collectionDetailsArray);
+  
+        } catch (err) {
+          console.error("Error fetching collection details:", err);
+        }
+      };
+      if (data?.bpa?.[0]?.applicationNo && data?.bpa?.[0]?.tenantId) {
+        collectionDetails();
+      }
+    }, [data]);
+   
     let dowloadOptions = [];
-    if(data?.status==="PAYMENT_PENDING"){
+    
+    if (collectionBillDetails?.length>0) {
+      dowloadOptions.push({
+        label: t("BPA_FEE_RECEIPT"),
+        onClick: async () => {
+          let response = null
+          if(collectionBillDetails?.[0]?.fileStoreId){
+            response = collectionBillDetails?.[0]?.fileStoreId          
+          }
+          else{
+             response = await Digit.PaymentService.generatePdf(tenantId, { Payments: collectionBillDetails}, "bpa-receipt");
+          }
+          const fileStore = await Digit.PaymentService.printReciept(tenantId, { fileStoreIds: response?.filestoreIds?.[0] ||response });
+          window.open(fileStore[response?.filestoreIds?.[0]] || fileStore[response], "_blank");
+        },
+      });
+        dowloadOptions.push({
+          order: 3,
+          label: t("BPA_PLANNING_PERMIT_ORDER"),
+          onClick: () => getPermitOccupancyOrderSearch({tenantId: data?.applicationData?.tenantId},"planningPermit"),
+        });
+      
+    }
+    if (collectionBillDetails?.length>1) {
+      dowloadOptions.push({
+        label: t("BPA_BUILDING_FEE_RECEIPT"),
+        onClick: async () => {
+          let response = null
+          if(collectionBillDetails?.[1]?.fileStoreId){
+            response = collectionBillDetails?.[1]?.fileStoreId          
+          }
+          else{
+             response = await Digit.PaymentService.generatePdf(tenantId, { Payments: collectionBillDetails}, "bpa-receipt");
+          }
+
+          const fileStore = await Digit.PaymentService.printReciept(tenantId, { fileStoreIds: response?.filestoreIds?.[0] ||response });
+          window.open(fileStore[response?.filestoreIds?.[0]] || fileStore[response], "_blank");
+        },
+      });
       dowloadOptions.push({
         order: 3,
-        label: t("BPA_PERMIT_ORDER"),
-        onClick: () => getPermitOccupancyOrderSearch({tenantId: data?.applicationData?.tenantId},"buildingpermit"),
+        label: t("BPA_BUILDING_PERMIT_ORDER"),
+        onClick: () => getBuildingPermitOrder({tenantId: data?.applicationData?.tenantId},"bpaBuildingPermit"),
       });
     }
    const Heading = (props) => {
@@ -601,18 +714,18 @@ import {
       return <Loader />;
     }
   
-    if (reciept_data && reciept_data?.Payments.length > 0 && recieptDataLoading == false) {
-      dowloadOptions.push({
-        label: t("BPA_FEE_RECEIPT"),
-        onClick: () => getRecieptSearch({ tenantId: reciept_data?.Payments[0]?.tenantId, payments: reciept_data?.Payments[0] }),
-      });
-        dowloadOptions.push({
-          order: 3,
-          label: t("BPA_PERMIT_ORDER"),
-          onClick: () => getPermitOccupancyOrderSearch({tenantId: data?.applicationData?.tenantId},"buildingpermit"),
-        });
+    // if (reciept_data && reciept_data?.Payments.length > 0 && recieptDataLoading == false) {
+    //   dowloadOptions.push({
+    //     label: t("BPA_FEE_RECEIPT"),
+    //     onClick: () => getRecieptSearch({ tenantId: reciept_data?.Payments[0]?.tenantId, payments: reciept_data?.Payments[0] }),
+    //   });
+    //     dowloadOptions.push({
+    //       order: 3,
+    //       label: t("BPA_PERMIT_ORDER"),
+    //       onClick: () => getPermitOccupancyOrderSearch({tenantId: data?.applicationData?.tenantId},"buildingpermit"),
+    //     });
       
-    }
+    // }
   
     // Extract data from response structure
     const landInfo = bpa_details?.landInfo || {};
