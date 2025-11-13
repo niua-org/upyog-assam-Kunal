@@ -1,25 +1,29 @@
-# ===== Build Stage =====
-FROM eclipse-temurin:8u372-jdk-alpine AS build
-# Or use: adoptopenjdk/openjdk8:ubi-minimal-jdk8u372-b07
 
+FROM egovio/amazoncorretto:17-alpine3.19 AS build
+# FROM ghcr.io/egovernments/alpine-maven-builder-jdk-8:1-master-na-6036091e AS build
 ARG WORK_DIR
 WORKDIR /app
 
-# Copy Maven project files
+# copy the project files
 COPY ${WORK_DIR}/pom.xml ./pom.xml
 COPY build/maven/start.sh ./start.sh
+
+# not useful for stateless builds
+# RUN mvn -B dependency:go-offline
+
 COPY ${WORK_DIR}/src ./src
+RUN mvn -B -f /app/pom.xml package
 
-# Build JAR
-RUN apk add --no-cache maven && mvn -B -f /app/pom.xml clean package
 
-# ===== Runtime Stage =====
-FROM eclipse-temurin:8u372-jre-alpine
-# Or: adoptopenjdk/openjdk8:ubi-minimal-jre8u372-b07
+# Create runtime image
+FROM egovio/amazoncorretto:17-alpine3.19
+#FROM ghcr.io/egovernments/8-openjdk-alpine:latest
+
 
 WORKDIR /opt/egov
 
 COPY --from=build /app/target/*.jar /app/start.sh /opt/egov/
+
 RUN chmod +x /opt/egov/start.sh
 
 CMD ["/opt/egov/start.sh"]
