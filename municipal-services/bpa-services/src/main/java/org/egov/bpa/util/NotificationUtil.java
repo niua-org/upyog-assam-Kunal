@@ -4,7 +4,6 @@ import static org.egov.bpa.util.BPAConstants.BILL_AMOUNT;
 import static org.egov.bpa.util.BPAConstants.DOWNLOAD_OC_LINK_PLACEHOLDER;
 import static org.egov.bpa.util.BPAConstants.DOWNLOAD_PERMIT_LINK_PLACEHOLDER;
 import static org.egov.bpa.util.BPAConstants.EMAIL_SUBJECT;
-import static org.egov.bpa.util.BPAConstants.NIUA_LINK;
 import static org.egov.bpa.util.BPAConstants.PAYMENT_LINK_PLACEHOLDER;
 import static org.egov.bpa.util.BPAConstants.WEBSITE_LINK_PLACEHOLDER;
 import static org.springframework.util.StringUtils.capitalize;
@@ -18,8 +17,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.validation.constraints.Size;
 
 import org.apache.commons.lang3.StringUtils;
 import org.egov.bpa.config.BPAConfiguration;
@@ -340,6 +337,7 @@ public class NotificationUtil {
 				String link = getUiAppHost(bpa.getTenantId()) + config.getPayLink()
 						.replace("$applicationNo", bpa.getApplicationNo()).replace("$mobile", entryset.getKey())
 						.replace("$tenantId", bpa.getTenantId()).replace("$businessService", busineService);
+				log.info("payment link : "+link);
 				link = getShortnerURL(link);
 				customizedMsg = customizedMsg.replace(PAYMENT_LINK_PLACEHOLDER, link);
 			}
@@ -466,11 +464,10 @@ public class NotificationUtil {
 		}
 
 		if (message.contains(WEBSITE_LINK_PLACEHOLDER)) {
-			message = message.replace(WEBSITE_LINK_PLACEHOLDER, NIUA_LINK);
-		}
-
-		if (message.contains("{PAYMENT_LINK}")) {
-			message = message.replace("{PAYMENT_LINK}", NIUA_LINK);
+			String link = getUiAppHost(bpa.getTenantId()) + config.getApplicationDetailsLink();
+			link = link.replace("$applicationNo", bpa.getApplicationNo());
+			link = getShortnerURL(link);
+			message = message.replace(WEBSITE_LINK_PLACEHOLDER, link);
 		}
 
 		return message;
@@ -490,8 +487,8 @@ public class NotificationUtil {
 			message = message.replace("{RECEIPT_LINK}", "");
 		}
 
-		if (message.contains("{PAYMENT_LINK}")) {
-			message = message.replace("{PAYMENT_LINK}", "");
+		if (message.contains(PAYMENT_LINK_PLACEHOLDER)) {
+			message = message.replace(PAYMENT_LINK_PLACEHOLDER, "");
 		}
 
 		return message;
