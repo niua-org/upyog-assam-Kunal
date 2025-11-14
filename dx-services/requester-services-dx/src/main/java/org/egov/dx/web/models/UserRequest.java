@@ -10,7 +10,7 @@ import org.egov.dx.web.models.User;
 import org.egov.dx.util.UserServiceConstants;
 import org.egov.dx.web.models.*;
 import org.hibernate.validator.constraints.Email;
-import org.hibernate.validator.constraints.SafeHtml;
+// import org.hibernate.validator.constraints.SafeHtml;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -29,15 +29,15 @@ public class UserRequest {
 
     private Long id;
 
-    @SafeHtml
+    // @SafeHtml
     @Size(max = 64)
     private String userName;
 
-    @SafeHtml
+    // @SafeHtml
     @Size(max = 40)
     private String access_token;
 
-    @SafeHtml
+    // @SafeHtml
     @Size(max = 5)
     private String salutation;
 
@@ -59,33 +59,33 @@ public class UserRequest {
     @Size(max = 128)
     private String emailId;
 
-    @SafeHtml
+    // @SafeHtml
     @Size(max = 50)
     private String altContactNumber;
 
-    @SafeHtml
+    // @SafeHtml
     @Size(max = 10)
     private String pan;
 
-    @SafeHtml
+    // @SafeHtml
     @Size(max = 20)
     private String aadhaarNumber;
 
-    @SafeHtml
+    // @SafeHtml
     @Size(max = 300)
     private String permanentAddress;
 
-    @SafeHtml
+    // @SafeHtml
     @Pattern(regexp = UserServiceConstants.PATTERN_CITY)
     @Size(max = 50)
     private String permanentCity;
 
-    @SafeHtml
+    // @SafeHtml
     @Pattern(regexp = UserServiceConstants.PATTERN_PINCODE)
     @Size(max = 10)
     private String permanentPinCode;
 
-    @SafeHtml
+    // @SafeHtml
     @Size(max = 300)
     private String correspondenceAddress;
 
@@ -98,7 +98,7 @@ public class UserRequest {
     private String correspondencePinCode;
     private Boolean active;
 
-    @SafeHtml
+    // @SafeHtml
     @Size(max = 16)
     private String locale;
 
@@ -111,19 +111,19 @@ public class UserRequest {
     private String fatherOrHusbandName;
     private GuardianRelation relationship;
 
-    @SafeHtml
+    // @SafeHtml
     @Size(max = 36)
     private String signature;
 
-    @SafeHtml
+    // @SafeHtml
     @Size(max = 32)
     private String bloodGroup;
 
-    @SafeHtml
+    // @SafeHtml
     @Size(max = 36)
     private String photo;
 
-    @SafeHtml
+    // @SafeHtml
     @Size(max = 300)
     private String identificationMark;
     private Long createdBy;
@@ -131,7 +131,7 @@ public class UserRequest {
     @Size(max = 64)
     private String password;
 
-    @SafeHtml
+    // @SafeHtml
     private String otpReference;
     private Long lastModifiedBy;
 
@@ -141,15 +141,15 @@ public class UserRequest {
 
     private Set<RoleRequest> roles;
 
-    @SafeHtml
+    // @SafeHtml
     @Size(max = 36)
     private String uuid;
 
-    @SafeHtml
+    // @SafeHtml
     @Size(max = 36)
     private String digilockerid;
 
-    @SafeHtml
+    // @SafeHtml
     @Size(max = 100)
     private String ssoId;
 

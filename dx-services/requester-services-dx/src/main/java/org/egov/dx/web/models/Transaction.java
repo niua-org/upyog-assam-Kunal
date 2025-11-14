@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.*;
-import org.hibernate.validator.constraints.SafeHtml;
+// import org.hibernate.validator.constraints.SafeHtml;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -40,7 +40,7 @@ public class Transaction {
     /**
      * Backward compatibility
      */
-    @SafeHtml
+    // @SafeHtml
     @JsonProperty("consumerCode")
     private String consumerCode;
 
