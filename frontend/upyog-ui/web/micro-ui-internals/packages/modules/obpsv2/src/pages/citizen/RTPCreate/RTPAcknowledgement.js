@@ -34,7 +34,6 @@ const RTPAcknowledgement = (props) => {
             <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
           </Link>
         </div>
-        {showToast ? <Toast error={"error"} label={t(props?.data?.data)} onClose={() => setShowToast(null)} isDleteBtn={true}/> : null}
       </Card>
     )
   }
