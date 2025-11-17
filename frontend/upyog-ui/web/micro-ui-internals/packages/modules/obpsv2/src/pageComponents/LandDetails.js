@@ -565,7 +565,7 @@ const LandDetails = ({ t, config, onSelect, formData, searchResult }) => {
             />
           </div>
           
-          <CardLabel>{`${t("BPA_FORM_39")}`} <span className="check-page-link-button">*</span></CardLabel>
+          <CardLabel>{`${t("BPA_FORM_39")}`} </CardLabel>
           <div className="field" style={{ marginBottom: "16px" }}>
             <UploadFile
               onUpload={selectForm39File}
