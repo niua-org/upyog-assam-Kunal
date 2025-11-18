@@ -89,23 +89,14 @@ const RTPForm = ({ t, config, onSelect, userType, formData, ownerIndex = 0, addN
     }, [bpaData]);
 
     useEffect(() => {
-        if (uploadMessage || isShowToast) {
+        if (uploadMessage) {
             setName("");
             setTenantIdData("");
             setUploadedFile(null);
             setFile("");
             setUploadMessage("");
         }
-        if (isShowToast) {
-            const redirectUrl = applicationNo 
-                ? `/upyog-ui/citizen/obpsv2/rtp/apply/acknowledgement?applicationNo=${applicationNo}`
-                : `/upyog-ui/citizen/obpsv2/rtp/apply/acknowledgement`;
-            history.replace(
-                redirectUrl,
-                { data: isShowToast?.label ? isShowToast?.label : "BPA_INTERNAL_SERVER_ERROR", type: "ERROR"}
-              );
-        }
-    }, [uploadMessage, isShowToast, isSubmitBtnDisable]);
+    }, [uploadMessage, isSubmitBtnDisable]);
 
     function onAdd() {
         setUploadMessage("NEED TO DELETE");
