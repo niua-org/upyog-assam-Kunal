@@ -1,6 +1,14 @@
 import React from "react";
 import { Loader } from "@upyog/digit-ui-react-components";
 
+/**
+ * EPramaanLogoutLoader Component
+ * 
+ * This component displays a full-screen loader with a "Logging out..." message.
+ * It is intended to be shown during the ePramaan SSO logout process to inform
+ * users that the logout is in progress.
+ * Added Styles inline for simplicity and centering the loader.
+ */
 const EPramaanLogoutLoader = () => {
   return (
     <div
