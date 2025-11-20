@@ -752,29 +752,34 @@ export const OBPSV2Services = {
       },
     };
     
-    let reportDetails = null;
+    let propertyDetails = null;
 
-// if (bpa?.additionalDetails?.submitReportinspection_pending?.length) {
-//   const values = bpa.additionalDetails.submitReportinspection_pending.flatMap((report) =>
-//     Object.entries(report).map(([key, value]) => ({
-//       title: `BPA_${key.toUpperCase()}`,
-//       value: value ?? "NA", 
-//     }))
-//   );
+    if (bpa?.additionalDetails?.propertyDetails) {
+      let values = Object.entries(bpa?.additionalDetails?.propertyDetails.details || {}).map(([key, value]) => ({
+        title: `BPA_${key.toUpperCase()}`,
+      value: value ?? "NA",
+    }))
+    if (bpa?.additionalDetails?.propertyID) {
+      values.push({
+        title: "BPA_PROPERTY_ID",
+        value: bpa.additionalDetails.propertyID,
+      });
+    }
 
-//   reportDetails = {
-//     title: "BPA_SUBMIT_REPORT_DETAILS",
-//     asSectionHeader: true,
-//     isInsert: true,
-//     isCommon: true,
-//     values: values,
-//   };
-// }
+    propertyDetails = {
+      title: "BPA_PROPERTY_DETAILS",
+      asSectionHeader: true,
+      isInsert: true,
+      isCommon: true,
+      values: values,
+    };
+  }
 
     details = [
       ...details,
       applicationDetailsInfo,
       areaMapping,
+      propertyDetails,
       applicantDetails,
       addressDetails,
       correspondenceAddressDetails,

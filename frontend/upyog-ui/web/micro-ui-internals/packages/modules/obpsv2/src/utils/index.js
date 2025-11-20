@@ -131,6 +131,8 @@ export const bpaPayload = async(data) => {
         todZone: data?.land?.todZone,
         tdrUsed: data?.land?.tdrUsed?.code,
         todAcknowledgement: data?.land?.todAcknowledgement,
+        propertyID : data?.propertyValidation?.propertyID,
+        propertyDetails : data?.propertyValidation?.propertyDetails
       },
       areaMapping: {
         buildingPermitAuthority: data?.areaMapping?.bpAuthority?.code,

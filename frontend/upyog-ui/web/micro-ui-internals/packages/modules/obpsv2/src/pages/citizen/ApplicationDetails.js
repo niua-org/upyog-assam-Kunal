@@ -19,7 +19,8 @@ import {
     TextInput,
     TextArea,
     CardLabelDesc,
-    UploadFile
+    UploadFile,
+    Dropdown
   } from "@upyog/digit-ui-react-components";
   import React, { useEffect, useState , Fragment} from "react";
   import { useTranslation } from "react-i18next";
@@ -106,7 +107,6 @@ import {
     const [selectedAction, setSelectedAction] = useState(null);
     const [assignResponse, setAssignResponse] = useState(null);
     const [toast, setToast] = useState(false);
-    const [oldRTPName, setOldRTPName] = useState();
     const [ newRTPName, setNewRTPName ] = useState();
     const bpaApplicationDetail = get(data, "bpa", []);
     const [comments, setComments] = useState("");
@@ -116,9 +116,40 @@ import {
     let bpa_details = (bpaApplicationDetail && bpaApplicationDetail.length > 0 && bpaApplicationDetail[0]) || {};
     const [edcrNumber, setEdcrNumber] = useState(bpaApplicationDetail?.[0]?.edcrNumber);
     const stateId = Digit.ULBService.getStateId();
+    const [rtpPopUp, setrtpPopUp] = useState(false);
+    const [oldRTPName, setOldRTPName] = useState(bpaApplicationDetail?.[0]?.rtpDetails?.rtpName);
+    const [rtpOptions, setRtpOptions] = useState([]);
+    const [registeredTechnicalPerson, setRegisteredTechnicalPerson] = useState();
     const { form22, form23A, form23B, loading } = useScrutinyFormDetails(edcrNumber, "assam", {
       enabled: !!edcrNumber,
     });
+    useEffect(() => {
+      const fetchUsers = async () => {
+        try {
+          const tenantId = Digit.ULBService.getCurrentTenantId();
+          const response = await Digit.OBPSV2Services.rtpsearch({
+            tenantId, roleCodes: ["BPA_ARCHITECT"] 
+          });
+          if (response?.user?.length > 0) {
+            const formattedRtpOptions = response.user.map((user) => ({
+              code:`${user.name}, +91 ${user.mobileNumber}, ${user.emailId}`,
+              uuid: user.uuid,
+              name: `${user.name}, +91 ${user.mobileNumber}, ${user.emailId}`,
+              i18nKey:`${user.name}, +91 ${user.mobileNumber}, ${user.emailId}`,
+            }));
+            setRtpOptions(formattedRtpOptions);
+          }
+        } catch (error) {
+          throw error;
+        }
+      };
+      fetchUsers();
+    }, [tenantId]);
+    useEffect(() => {
+      if (bpaApplicationDetail?.[0]?.rtpDetails?.rtpName) {
+        setOldRTPName(bpaApplicationDetail[0].rtpDetails.rtpName);
+      }
+    }, [bpaApplicationDetail]);
 
     useEffect(() => {
       if (bpaApplicationDetail?.[0]?.edcrNumber !== edcrNumber) {
@@ -139,20 +170,6 @@ import {
       return "BPA.PLANNING_PERMIT_FEE";
     };
     
-    const { data: reciept_data, isLoading: recieptDataLoading } = Digit.Hooks.useRecieptSearch(
-      {
-        tenantId: tenantId,
-        businessService: getBusinessService(),
-        consumerCodes: acknowledgementIds,
-        isEmployee: false,
-      },
-      { enabled: acknowledgementIds ? true : false }
-    );
-    // useEffect(() => {
-    //   if (bpa_details && Object.keys(bpa_details).length > 0) {
-    //     setSubmitReport({ bpa_details });
-    //   }
-    // }, [bpa_details]);
     useEffect(() => {
       (async () => {
         setActionError(null);
@@ -200,6 +217,53 @@ import {
                 documentType: file.type,
                 fileName: file?.name,
                 fileStoreId: selectedAction === "VALIDATE_GIS" ? "" : uploadedFile,
+              },
+            ] : null
+        },
+      },
+    
+
+    });
+
+    setAssignResponse(response);
+    setToast(true);
+    setLoader(true);
+    
+    // Refresh data to show updated state
+    await refetch();
+    const updatedWorkflowDetails = await Digit.WorkflowService.getByBusinessId(tenantId, acknowledgementIds);
+    setWorkflowDetails(updatedWorkflowDetails);
+    //window.location.reload();
+    setTimeout(() => setToast(false), 1000);
+  } catch (err) {
+    console.error("Error while assigning:", err);
+    setToast(true);
+  }
+}
+async function onrtpChange(status, comments, type) {
+
+  try {
+    const applicationDetails = {
+      ...data?.bpa?.[0],
+      rtpDetails: {
+        ...data?.bpa?.[0]?.rtpDetails,
+        rtpName: newRTPName,    
+      },
+    };
+    const response = await mutation.mutateAsync({
+      BPA: 
+      {
+        ...applicationDetails,
+        workflow: {
+          ...applicationDetails.workflow, 
+          action: status,
+          comments: comments,
+            assignes: null,
+            varificationDocuments: uploadedFile ? [
+              {
+                documentType: file.type,
+                fileName: file?.name,
+                fileStoreId:  uploadedFile,
               },
             ] : null
         },
@@ -336,20 +400,7 @@ import {
      * with the generated receipt's file store ID.
      */
 
-    async function getRecieptSearch({ tenantId, payments, ...params }) {
-      let application = bpaApplicationDetail[0] || {};
-      let fileStoreId = application?.paymentReceiptFilestoreId
-      if (!fileStoreId) {
-        let response = { filestoreIds: [payments?.fileStoreId] };
-        response = await Digit.PaymentService.generatePdf(tenantId, { Payments: [{ ...payments }] }, "bpa-receipt");
-      
-        
-        fileStoreId = response?.filestoreIds[0];
-        refetch();
-      }
-      const fileStore = await Digit.PaymentService.printReciept(tenantId, { fileStoreIds: fileStoreId });
-      window.open(fileStore[fileStoreId], "_blank");
-    }
+    
     const getPermitOccupancyOrderSearch = async (order, mode = "download") => {
       let applicationNo =  data?.bpa?.[0]?.applicationNo ;
       let bpaResponse = await Digit.OBPSV2Services.search({tenantId,
@@ -524,6 +575,9 @@ import {
   }
   function redirectToPage(redirectingUrl){
       window.location.href=redirectingUrl;
+    }
+    function rtpChange(){
+      setrtpPopUp(true);
     }
   
     function onActionSelect(action) {
@@ -743,6 +797,7 @@ import {
     const landInfo = bpa_details?.landInfo || {};
     const owners = landInfo?.owners || [];
     const areaMapping= bpa_details?.areaMapping || {};
+    const propertyDetails = bpa_details?.additionalDetails?.propertyDetails
     const primaryOwner = owners.length > 0 ? owners[0] : {};
     const address = landInfo?.address || {};
     const permanentAddress = primaryOwner?.permanentAddress || {};
@@ -816,6 +871,20 @@ import {
                 text={areaMapping?.mouza || t("CS_NA")}
               />
             </StatusTable>
+            <CardSubHeader style={{ fontSize: "24px" }}>{t("BPA_PROPERTY_DETAILS")}</CardSubHeader>
+            <StatusTable>
+          <Row
+            label={t("BPA_PROPERTY_ID")}
+            text={bpa_details?.additionalDetails?.propertyID||"NA"}
+          />
+          {Object.entries(propertyDetails.details || {}).map(([key, value]) => (
+            <Row
+              key={key}
+              label={t(`BPA_${key.toUpperCase()}`)}
+              text={value || "NA"}
+            />
+          ))}
+          </StatusTable>
   
             <CardSubHeader style={{ fontSize: "24px" }}>{t("BPA_APPLICANT_DETAILS")}</CardSubHeader>
             <StatusTable>
@@ -1338,8 +1407,6 @@ import {
                 await onAssign(selectedAction, comments);
               }
 
-              if (selectedAction === "NEWRTP" && !oldRTPName) setActionError(t("CS_OLD_RTP_NAME_MANDATORY"));
-              if (selectedAction === "NEWRTP" && !newRTPName) setActionError(t("CS_NEW_RTP_NAME_MANDATORY"));
             } catch (err) {
               console.error(err);
             }
@@ -1354,6 +1421,239 @@ import {
     {(selectedAction === "APPROVE" || selectedAction === "ACCEPT" || selectedAction === "SEND" || selectedAction === "REJECT"|| selectedAction==="SEND_BACK_TO_RTP" || selectedAction==="SUBMIT_REPORT" || selectedAction==="RECOMMEND_TO_CEO" || selectedAction==="SEND_BACK_TO_GMDA") && (
       <div>
         <CardLabel>{t("COMMENTS")}</CardLabel>
+        <TextArea 
+          name="reason" 
+          onChange={addComment} 
+          value={comments} 
+          maxLength={500} 
+        />
+        <div style={{ textAlign: "right", fontSize: "12px", color: "#666" }}>
+          {comments.length}/500
+        </div>
+        <CardLabel>{t("CS_ACTION_SUPPORTING_DOCUMENTS")}</CardLabel>
+        <CardLabelDesc>{t("CS_UPLOAD_RESTRICTIONS")}</CardLabelDesc>
+        <UploadFile
+          id="pgr-doc"
+          accept=".jpg"
+          onUpload={selectfile}
+          onDelete={() => setUploadedFile(null)}
+          message={isUploading ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <LoadingSpinner />
+                        <span>Uploading...</span>
+                      </div>
+                      ) : 
+            uploadedFile
+              ? `1 ${t("CS_ACTION_FILEUPLOADED")}`
+              : t("CS_ACTION_NO_FILEUPLOADED")
+          }
+        />
+      </div>
+    )}
+            {selectedAction === "VALIDATE_GIS" && !showGisResponse && (
+                  <div>
+                    <CardLabel>{t("CS_ACTION_UPLOAD_LOCATION_FILE")}</CardLabel>
+                    <UploadFile
+                      id="pgr-doc"
+                      accept=".kml"
+                      onUpload={selectfile}
+                      onDelete={() => setUploadedFile(null)}
+                      message={
+                        isUploading ? (
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <LoadingSpinner />
+                            <span>Uploading...</span>
+                          </div>
+                        ) : uploadedFile ? (
+                          `1 ${t("CS_ACTION_FILEUPLOADED")}`
+                        ) : (
+                          t("CS_ACTION_NO_FILEUPLOADED")
+                        )
+                      }
+                    />
+                  </div>
+                )}
+  
+                {selectedAction === "VALIDATE_GIS" && showGisResponse && gisResponse && (
+                  <div style={{padding: "16px", backgroundColor: gisValidationSuccess ? "#e8f5e9" : "#ffebee", borderRadius: "4px" }}>
+                    <h3 style={{ marginBottom: "16px", color: gisValidationSuccess ? "#2e7d32" : "#c62828" }}>
+                      {gisValidationSuccess ? t("GIS_VALIDATION_SUCCESS") : t("GIS_VALIDATION_FAILED")}
+                    </h3>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                      <div>
+                        <strong>{t("LATITUDE")}:</strong> {gisResponse.latitude}
+                      </div>
+                      <div>
+                        <strong>{t("LONGITUDE")}:</strong> {gisResponse.longitude}
+                      </div>
+                      <div>
+                        <strong>{t("DISTRICT")}:</strong> {gisResponse.district}
+                      </div>
+                      <div>
+                        <strong>{t("LANDUSE")}:</strong> {gisResponse.landuse}
+                      </div>
+                      <div>
+                        <strong>{t("VILLAGE")}:</strong> {gisResponse.village}
+                      </div>
+                      <div>
+                        <strong>{t("AREA_HECTARE")}:</strong> {gisResponse.areaHectare}
+                      </div>
+                      <div>
+                        <strong>{t("WARD_NO")}:</strong> {gisResponse.wardNo}
+                      </div>
+  
+                     <div style={{ gridColumn: "span 2", textAlign: "center", marginTop: "20px" }}>
+                      <button
+                        onClick={() => {
+                          if (gisResponse.latitude && gisResponse.longitude) {
+                            window.open(`https://www.google.com/maps?q=${gisResponse.latitude},${gisResponse.longitude}`, "_blank");
+                          } else {
+                            setToastMessage(t("CS_GIS_MAP_COORDINATES_MISSING"));
+                          }
+                        }}
+                        style={{
+                          padding: "10px 16px",
+                          backgroundColor: "#a82227",
+                          border: "none",
+                          borderRadius: "6px",
+                          color: "white",
+                          cursor: "pointer",
+                          fontWeight: "600",
+                        }}
+                      >
+                        {t("VIEW_ON_MAP")}
+                      </button>
+                    </div>
+                    </div>
+                  </div>
+                )}
+
+    {selectedAction === "NEW_RTP" && (
+      <div>
+        <CardLabel></CardLabel>
+        <TextArea 
+          name="reason" 
+          onChange={addComment} 
+          value={comments} 
+          maxLength={500} 
+        />
+        <div style={{ textAlign: "right", fontSize: "12px", color: "#666" }}>
+          {comments.length}/500
+        </div>
+        <CardLabel>{t("CS_ACTION_SUPPORTING_DOCUMENTS")}</CardLabel>
+        <CardLabelDesc>{t("CS_UPLOAD_RESTRICTIONS")}</CardLabelDesc>
+        <UploadFile
+          id="pgr-doc"
+          accept=".jpg"
+          onUpload={selectfile}
+          onDelete={() => setUploadedFile(null)}
+          message={
+            uploadedFile
+              ? `1 ${t("CS_ACTION_FILEUPLOADED")}`
+              : t("CS_ACTION_NO_FILEUPLOADED")
+          }
+        />
+      </div>
+    )}
+  </React.Fragment>
+</Card>
+
+    </Modal>
+            ):null}
+            {rtpPopUp ? (
+               <Modal
+      headerBarMain={
+        <Heading
+          label={
+             t(`CHANGE_RTP`)
+          }
+        />
+      }
+      headerBarEnd={<CloseBtn onClick={() => setrtpPopUp(false)} />}
+      actionCancelLabel={t("CS_COMMON_CANCEL")}
+      actionCancelOnSubmit={() => setrtpPopUp(false)}
+      actionSaveLabel={
+        t("CS_COMMON_SUBMIT")
+      }
+      popupStyles={{}}
+
+      actionSaveOnSubmit={async (e) => {
+            try {
+              
+                await onrtpChange(bpa_details?.status, comments);
+              
+
+              if ( !oldRTPName) setActionError(t("CS_OLD_RTP_NAME_MANDATORY"));
+              if ( !newRTPName) setActionError(t("CS_NEW_RTP_NAME_MANDATORY"));
+              if(!comments) setActionError(t("CS_REASON_FOR_CHANGING_RTP_MANDATORY"))
+            } catch (err) {
+              console.error(err);
+            }
+          }}
+      error={actioneError}
+      setError={setActionError}
+      hideSubmit={selectedAction === "VALIDATE_GIS" && showGisResponse ? true : false}
+
+    >
+      <Card>
+  <React.Fragment>
+    {(selectedAction === "APPROVE" || selectedAction === "ACCEPT" || selectedAction === "SEND" || selectedAction === "REJECT"|| selectedAction==="SEND_BACK_TO_RTP" || selectedAction==="SUBMIT_REPORT" || selectedAction==="RECOMMEND_TO_CEO" || selectedAction==="SEND_BACK_TO_GMDA") && (
+      <div>
+        <CardLabel>{t("COMMENTS")}</CardLabel>
+        <TextArea 
+          name="reason" 
+          onChange={addComment} 
+          value={comments} 
+          maxLength={500} 
+        />
+        <div style={{ textAlign: "right", fontSize: "12px", color: "#666" }}>
+          {comments.length}/500
+        </div>
+        <CardLabel>{t("CS_ACTION_SUPPORTING_DOCUMENTS")}</CardLabel>
+        <CardLabelDesc>{t("CS_UPLOAD_RESTRICTIONS")}</CardLabelDesc>
+        <UploadFile
+          id="pgr-doc"
+          accept=".jpg"
+          onUpload={selectfile}
+          onDelete={() => setUploadedFile(null)}
+          message={isUploading ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <LoadingSpinner />
+                        <span>Uploading...</span>
+                      </div>
+                      ) : 
+            uploadedFile
+              ? `1 ${t("CS_ACTION_FILEUPLOADED")}`
+              : t("CS_ACTION_NO_FILEUPLOADED")
+          }
+        />
+      </div>
+    )}
+    {rtpPopUp && (
+      <div>
+      <CardLabel>{t("OLD_RTP_NAME")}</CardLabel>
+      <TextInput
+            type="text"
+            t={t}
+            isMandatory={false}
+            optionKey="i18nKey"
+            name="oldRTPName"
+            value={oldRTPName}
+            onChange={(e) => setOldRTPName(e.target.value)}
+            disabled={true}
+        />
+        <CardLabel>{t("NEW_RTP_NAME")}</CardLabel>
+        <Dropdown
+            t={t}
+            option={rtpOptions}
+            selected={registeredTechnicalPerson}
+            optionKey="i18nKey"
+            select={setRegisteredTechnicalPerson}
+            optionCardStyles={{ maxHeight: "300px", overflowY: "auto" }}
+            placeholder={t("BPA_SELECT_REGISTERED_TECHNICAL_PERSON")}
+          />
+        <CardLabel>{t("REASON_FOR_CHANGING_PREVIOUS_RTP")}</CardLabel>
+        
         <TextArea 
           name="reason" 
           onChange={addComment} 

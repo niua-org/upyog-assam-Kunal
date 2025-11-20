@@ -13,9 +13,9 @@ import {
 import Timeline from "../components/Timeline";
 import { OBPSV2Services } from "../../../../libraries/src/services/elements/OBPSV2";
 
-const PropertyValidation = ({ t, config, onSelect, formData }) => {
-  const [propertyID, setPropertyID] = useState(formData?.propertyValidation?.propertyID);
-  const [propertyDetails, setPropertyDetails] = useState(formData?.propertyValidation?.propertyDetails);
+const PropertyValidation = ({ t, config, onSelect, formData, searchResult }) => {
+  const [propertyID, setPropertyID] = useState(formData?.propertyValidation?.propertyID||searchResult?.additionalDetails?.propertyID);
+  const [propertyDetails, setPropertyDetails] = useState(formData?.propertyValidation?.propertyDetails||searchResult?.additionalDetails?.propertyDetails);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   // Regex to match the TIN pattern: TIN followed by exactly 10 digits
