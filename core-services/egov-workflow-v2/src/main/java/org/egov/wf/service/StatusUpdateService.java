@@ -58,6 +58,10 @@ public class StatusUpdateService {
     /**
      * Updates the assignee for process instances without creating a new transition entry
      * Pushes the update request to Kafka topic for asynchronous processing by persister
+     * The persister will:
+     * 1. Delete documents associated with transitions after first APPLY action
+     * 2. Delete workflow transitions after first APPLY action
+     * 3. Update assignee table with new assignee UUID and lastModifiedTime
      * 
      * @param requestInfo The RequestInfo of the request
      * @param processStateAndActions List of ProcessStateAndAction containing ProcessInstance to be updated

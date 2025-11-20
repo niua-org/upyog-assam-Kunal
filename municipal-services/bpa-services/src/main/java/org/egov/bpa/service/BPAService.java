@@ -495,9 +495,7 @@ public class BPAService {
 		switch (action.toUpperCase()) {
 
 		case "RTP_IS_CHANGED":
-			enrichmentService.enrichBPAUpdateRequest(bpaRequest, null);
-            wfIntegrator.reassignRTP(bpaRequest);
-			repository.update(bpaRequest, BPAConstants.RTP_UPDATE);
+			reassignRTP(bpaRequest);
 			log.info("RTP details updated successfully without workflow for citizen application: {}",
 					bpa.getApplicationNo());
 			break;

@@ -24,8 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
-import javax.validation.Valid;
-
 @Service
 @Slf4j
 public class WorkflowIntegrator {
@@ -158,7 +156,7 @@ public class WorkflowIntegrator {
 	 *
 	 * @param bpaRequest The BPARequest containing the BPA and RequestInfo
 	 */
-	public void reassignRTP(@Valid BPARequest bpaRequest) {
+	public void reassignRTP(BPARequest bpaRequest) {
 		log.info("Reassigning RTP for BPA: {}", bpaRequest.getBPA().getApplicationNo());
 		String wfTenantId = bpaRequest.getBPA().getTenantId();
 		JSONArray array = new JSONArray();

@@ -113,7 +113,7 @@ public class BPAController {
 	 * Wrapper API to bpa-calculator /_estimate API as
 	 * cannot access bpa-calculator APIs from UI directly
 	 * 
-	 * @param bpaReq The calculation Request
+	 * @param bpaRequest The calculation Request
 	 * @return Calculation Response
 	 */
 	@PostMapping(value = { "/_estimate" })

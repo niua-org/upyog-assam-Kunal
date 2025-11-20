@@ -171,6 +171,66 @@ public class TransitionService {
         return businessServices.get(0);
     }
 
+    /**
+     * Fetches ProcessInstances from DB and BusinessService specifically for reassignment
+     * Gets state from DB (not request) and maps to full State object from BusinessService with actions
+     * 
+     * @param processInstances The list of ProcessInstance from request
+     * @return List of ProcessStateAndAction containing request data, DB data, and current state from DB with actions
+     */
+    public List<ProcessStateAndAction> getProcessStateAndActionsForReassign(List<ProcessInstance> processInstances){
+        List<ProcessStateAndAction> processStateAndActions = new LinkedList<>();
+        
+        // Fetch ProcessInstances from DB
+        Map<String, ProcessInstance> dbInstanceMap = prepareProcessStateAndAction(processInstances, null);
+        
+        // Fetch BusinessService for state configuration (with actions)
+        BusinessService businessService = getBusinessService(processInstances);
+        
+        // Create map of state UUID to full State object from BusinessService (for role validation)
+        Map<String, State> stateUuidToStateMap = new HashMap<>();
+        if(!CollectionUtils.isEmpty(businessService.getStates())){
+            businessService.getStates().forEach(state -> {
+                if(state.getUuid() != null) {
+                    stateUuidToStateMap.put(state.getUuid(), state);
+                }
+            });
+        }
+        
+        // Create ProcessStateAndAction objects with current state from DB (mapped to full State from BusinessService)
+        for(ProcessInstance processInstance: processInstances){
+            ProcessStateAndAction processStateAndAction = new ProcessStateAndAction();
+            processStateAndAction.setProcessInstanceFromRequest(processInstance);
+            processStateAndAction.setProcessInstanceFromDb(dbInstanceMap.get(processInstance.getBusinessId()));
+            
+            // Get current state from DB ProcessInstance and map to full State from BusinessService
+            State currentState = null;
+            if(processStateAndAction.getProcessInstanceFromDb() != null) {
+                State stateFromDb = processStateAndAction.getProcessInstanceFromDb().getState();
+                // Map state UUID from DB to full State object from BusinessService (with actions)
+                if(stateFromDb != null && stateFromDb.getUuid() != null) {
+                    currentState = stateUuidToStateMap.get(stateFromDb.getUuid());
+                }
+            }
+            
+            // If state not found, use start state from BusinessService as fallback
+            if(currentState == null) {
+                for(State state : businessService.getStates()){
+                    if(state.getIsStartState() != null && state.getIsStartState()) {
+                        currentState = state;
+                        break;
+                    }
+                }
+            }
+            
+            processStateAndAction.setCurrentState(currentState);
+            // Action matching skipped - not needed for reassign
+            processStateAndActions.add(processStateAndAction);
+        }
+        
+        return processStateAndActions;
+    }
+
 
 
 

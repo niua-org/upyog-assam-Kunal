@@ -291,8 +291,8 @@ public class WorkflowService {
     public List<ProcessInstance> reassign(ProcessInstanceRequest request){
         RequestInfo requestInfo = request.getRequestInfo();
         
-        // Fetch current process instances from DB
-        List<ProcessStateAndAction> processStateAndActions = transitionService.getProcessStateAndActions(request.getProcessInstances(),false);
+        // Fetch current process instances from DB (using reassign method)
+        List<ProcessStateAndAction> processStateAndActions = transitionService.getProcessStateAndActionsForReassign(request.getProcessInstances());
         
         // Enrich assignees with user details
         enrichmentService.enrichProcessRequestForReassign(requestInfo, processStateAndActions);
