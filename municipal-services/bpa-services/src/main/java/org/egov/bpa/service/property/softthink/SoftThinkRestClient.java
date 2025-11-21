@@ -14,6 +14,9 @@ public class SoftThinkRestClient {
 
     @Value("${softthink.property.service.url}")
     private String baseUrl;
+    
+    @Value("${softthink.property.service.endpoint}")
+    private String endpoint;
 
     @Value("${softthink.property.service.auth.token}")
     private String authToken;
@@ -21,7 +24,7 @@ public class SoftThinkRestClient {
     private final RestTemplate restTemplate = new RestTemplate();
 
     public SoftThinkPropertyResponse fetchHoldingDetails(SoftThinkPropertyRequest request) {
-        String url = baseUrl + "/SCMBAPI/API/Holding/FetchHoldingDetails";
+        String url = baseUrl + endpoint;
         
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/json");
