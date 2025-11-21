@@ -3,6 +3,9 @@ package org.upyog.gis.service;
 import org.upyog.gis.model.GISResponse;
 import org.upyog.gis.model.GISRequestWrapper;
 import org.springframework.web.multipart.MultipartFile;
+import org.upyog.gis.model.GisLogSearchCriteria;
+import org.upyog.gis.model.GisLog;
+import java.util.List;
 
 /**
  * Service interface for GIS operations
@@ -18,4 +21,9 @@ public interface GisService {
      * @throws Exception if processing fails
      */
     GISResponse findZoneFromGeometry(MultipartFile file, GISRequestWrapper gisRequestWrapper) throws Exception;
+
+
+    List<GisLog> searchGisLog(GisLogSearchCriteria criteria);
+
+    Integer getGisLogCount(GisLogSearchCriteria criteria);
 }

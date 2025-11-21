@@ -6,11 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.upyog.gis.client.FilestoreClient;
 import org.upyog.gis.client.GistcpClient;
 import org.upyog.gis.config.GisProperties;
-import org.upyog.gis.model.GisLog;
-import org.upyog.gis.model.GISResponse;
-import org.upyog.gis.model.GISRequestWrapper;
-import org.upyog.gis.model.GISRequest;
-import org.upyog.gis.model.GistcpResponse;
+import org.upyog.gis.model.*;
 import org.egov.common.contract.response.ResponseInfo;
 import org.upyog.gis.repository.GisLogRepository;
 import org.upyog.gis.service.GisService;
@@ -22,6 +18,8 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import java.util.List;
+import org.upyog.gis.model.GisLogSearchCriteria;
 
 import java.io.InputStream;
 import java.time.Instant;
@@ -221,5 +219,27 @@ public class GisServiceImpl implements GisService {
                 .latitude(latitude)
                 .longitude(longitude)
                 .build();
+    }
+
+
+    @Override
+    public List<GisLog> searchGisLog(GisLogSearchCriteria criteria) {
+        log.info("Searching GIS logs with criteria: {}", criteria);
+
+        if(criteria.isEmpty()){
+            throw new IllegalArgumentException("At least one search parameter is required");
+        }
+        return logRepository.search(criteria);
+    }
+
+
+    @Override
+    public Integer getGisLogCount(GisLogSearchCriteria criteria) {
+        log.info("Counting GIS logs with criteria: {}", criteria);
+
+        if(criteria.isEmpty()){
+            throw new IllegalArgumentException("At least one search parameter is required");
+        }
+        return logRepository.count(criteria);
     }
 }
