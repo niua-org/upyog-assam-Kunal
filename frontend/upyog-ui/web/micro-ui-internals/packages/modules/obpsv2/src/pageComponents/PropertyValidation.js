@@ -18,6 +18,7 @@ const PropertyValidation = ({ t, config, onSelect, formData, searchResult }) => 
   const [propertyDetails, setPropertyDetails] = useState(formData?.propertyValidation?.propertyDetails||searchResult?.additionalDetails?.propertyDetails);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true);
   // Regex to match the TIN pattern: TIN followed by exactly 10 digits
   const isValidPropertyID = (propertyID) => {
     const regex = /^TIN\d{10}$/;
@@ -57,9 +58,10 @@ const PropertyValidation = ({ t, config, onSelect, formData, searchResult }) => 
     setLoading(true); // Set loading state to true when starting the API call
     try {
       const property = await OBPSV2Services.propertyValidate({
+        tenantId: tenantId,
         propertyNumber: propertyID,
       });
-      if (property.isValid) {
+      if (property.valid) {
         setPropertyDetails(property);
         setError(null);
       } else {
